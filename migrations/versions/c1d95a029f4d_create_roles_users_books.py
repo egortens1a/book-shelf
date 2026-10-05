@@ -1,8 +1,8 @@
 """create roles users books
 
-Revision ID: e1d248c560c2
+Revision ID: c1d95a029f4d
 Revises: 
-Create Date: 2026-10-05 13:34:52.167770
+Create Date: 2026-10-06 01:49:49.890507
 
 """
 from typing import Sequence, Union
@@ -10,11 +10,9 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-from app.models import RoleTypes, UserStatus, BookStatus, AccessType
-
 
 # revision identifiers, used by Alembic.
-revision: str = 'e1d248c560c2'
+revision: str = 'c1d95a029f4d'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -28,33 +26,35 @@ def upgrade() -> None:
     sa.Column('title', sa.String(length=255), nullable=False),
     sa.Column('description', sa.Text(), server_default='', nullable=False),
     sa.Column('publication_year', sa.Integer(), nullable=True),
-    sa.Column('access_type', sa.Enum(AccessType, native_enum=False, length=20), server_default=AccessType.NONE.value, nullable=False),
-    sa.Column('status', sa.Enum(BookStatus, native_enum=False, length=20), server_default=BookStatus.DRAFT.value, nullable=False),
+    sa.Column('access_type', sa.Enum('FREE', 'SUBSCRIPTION', 'NONE', name='accesstype', native_enum=False, length=20), server_default='NONE', nullable=False),
+    sa.Column('status', sa.Enum('DRAFT', 'PUBLISHED', 'ARCHIVED', name='bookstatus', native_enum=False, length=20), server_default='DRAFT', nullable=False),
     sa.Column('text_content', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.CheckConstraint("access_type IN ('FREE', 'SUBSCRIPTION', 'NONE')", name=op.f('ck_books_access_type')),
+    sa.CheckConstraint("status IN ('DRAFT', 'PUBLISHED', 'ARCHIVED')", name=op.f('ck_books_book_status')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_books'))
     )
     roles_table = op.create_table('roles',
     sa.Column('id', sa.SmallInteger(), sa.Identity(always=False), nullable=False),
-    sa.Column('name', sa.Enum(RoleTypes, native_enum=False, length=20), nullable=False),
+    sa.Column('name', sa.Enum('READER', 'LIBRARIAN', 'ADMIN', name='roletypes', native_enum=False, length=20), nullable=False),
+    sa.CheckConstraint("name IN ('READER', 'LIBRARIAN', 'ADMIN')", name=op.f('ck_roles_role_type')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_roles')),
     sa.UniqueConstraint('name', name=op.f('uq_roles_name'))
     )
-    op.bulk_insert(roles_table,
-        [
-            {'name': RoleTypes.ADMIN.value},
-            {'name': RoleTypes.LIBRARIAN.value},
-            {'name': RoleTypes.READER.value},
-        ]
-    )
+    op.bulk_insert(roles_table, [
+        {'name': 'READER'},
+        {'name': 'LIBRARIAN'},
+        {'name': 'ADMIN'},
+    ])
     op.create_table('users',
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False), nullable=False),
     sa.Column('full_name', sa.String(length=255), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
     sa.Column('password_hash', sa.String(length=255), nullable=False),
     sa.Column('role_id', sa.SmallInteger(), nullable=False),
-    sa.Column('status', sa.Enum(UserStatus, native_enum=False, length=20), server_default=UserStatus.ACTIVE.value, nullable=False),
+    sa.Column('status', sa.Enum('ACTIVE', 'BLOCKED', name='userstatus', native_enum=False, length=20), server_default='ACTIVE', nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.CheckConstraint("status IN ('ACTIVE', 'BLOCKED')", name=op.f('ck_users_user_status')),
     sa.ForeignKeyConstraint(['role_id'], ['roles.id'], name=op.f('fk_users_role_id_roles'), ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_users')),
     sa.UniqueConstraint('email', name=op.f('uq_users_email'))
