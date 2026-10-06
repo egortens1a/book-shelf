@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Enum, Identity, Integer, String, Text, func
+from sqlalchemy import BigInteger, DateTime, Enum, Identity, Integer, String, Text, func, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.base import Base, enum_check
@@ -20,7 +20,13 @@ class Book(Base):
     __tablename__ = "books"
     __table_args__ = (
         enum_check("access_type", AccessType, "access_type"),
-        enum_check("status", BookStatus, "book_status")
+        enum_check("status", BookStatus, "book_status"), 
+        # text_content пуст только при access_type = NONE
+        CheckConstraint(
+            "(access_type = 'NONE' AND text_content IS NULL) "
+            "OR (access_type <> 'NONE' AND text_content IS NOT NULL)",
+            name="ck_book_text_content_by_access_type",
+        ),
         )
     authors = relationship("Author", secondary="book_author", back_populates="books")
     genres = relationship("Genre", secondary="book_genre", back_populates="books")
@@ -37,7 +43,6 @@ class Book(Base):
         Enum(BookStatus, native_enum=False, length=20, create_constraint=False),
         default=BookStatus.DRAFT, server_default=BookStatus.DRAFT.value
     )
-    text_content: Mapped[str | None] = mapped_column(Text, 
-                                                     default=None)
+    text_content: Mapped[str | None] = mapped_column(Text, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), 
                                                  server_default=func.now())
