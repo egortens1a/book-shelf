@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Identity, Index, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.base import Base
+from app.core.base import Base, enum_check
 
 
 class ReservationStatus(str, enum.Enum):
@@ -18,6 +18,15 @@ class ReservationStatus(str, enum.Enum):
 
 class Reservation(Base):
     __tablename__ = "reservations"
+    __table_args__ = (
+        enum_check("status", ReservationStatus, "reservation_status"),
+        Index(
+            "uq_reservations_copy_active",
+            "copy_id",
+            unique=True,
+            postgresql_where=text("status IN ('CREATED', 'ISSUED')"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     user_id: Mapped[int] = mapped_column(
@@ -27,8 +36,7 @@ class Reservation(Base):
         BigInteger, ForeignKey("book_copies.id", ondelete="RESTRICT"), index=True
     )
     status: Mapped[ReservationStatus] = mapped_column(
-        Enum(ReservationStatus, native_enum=False, length=20,
-             create_constraint=True, name="reservation_status"),
+        Enum(ReservationStatus, native_enum=False, length=20, create_constraint=False),
         default=ReservationStatus.CREATED,
         server_default=ReservationStatus.CREATED.value,
         index=True,
@@ -40,12 +48,3 @@ class Reservation(Base):
     issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     returned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-
-    __table_args__ = (
-        Index(
-            "uq_reservations_copy_active",
-            "copy_id",
-            unique=True,
-            postgresql_where=text("status IN ('CREATED', 'ISSUED')"),
-        ),
-    )
