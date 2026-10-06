@@ -12,3 +12,19 @@ class UserNotFound(ServiceError):
 
 class SubscriptionAlreadyQueued(ServiceError):
     pass
+
+
+class BookNotFound(ServiceError):
+    pass
+
+
+class CopyNotFound(ServiceError):
+    pass
+
+
+class CopyNotAvailable(ServiceError):
+    pass
+
+
+class DuplicateInventoryNumber(ServiceError):
+    pass
