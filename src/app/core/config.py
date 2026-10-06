@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     fine_per_day: Decimal
     fine_lost: Decimal
     subscription_price: Decimal
+    subscription_days: int = 30
     
     
 def get_settings() -> Settings:
