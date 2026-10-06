@@ -9,6 +9,7 @@ from app.core.base import Base, enum_check
 
 
 class SubscriptionStatus(str, enum.Enum):
+    PENDING = "PENDING"
     ACTIVE = "ACTIVE"
     EXPIRED = "EXPIRED"
 
@@ -22,6 +23,12 @@ class Subscription(Base):
             "user_id",
             unique=True,
             postgresql_where=text("status = 'ACTIVE'"),
+        ),
+        Index(
+            "uq_subscriptions_user_pending",
+            "user_id",
+            unique=True,
+            postgresql_where=text("status = 'PENDING'"),
         ),
     )
 
