@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import BigInteger, DateTime, Enum, Identity, Integer, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.base import Base, enum_check
 
@@ -22,10 +22,12 @@ class Book(Base):
         enum_check("access_type", AccessType, "access_type"),
         enum_check("status", BookStatus, "book_status")
         )
+    authors = relationship("Author", secondary="book_author", back_populates="books")
+    genres = relationship("Genre", secondary="book_genre", back_populates="books")
     
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     title: Mapped[str] = mapped_column(String(255))
-    description: Mapped[str] = mapped_column(Text, default="", server_default="")
+    description: Mapped[str] = mapped_column(Text, nullable=False)
     publication_year: Mapped[int | None] = mapped_column(Integer)
     access_type: Mapped[AccessType] = mapped_column(
         Enum(AccessType, native_enum=False, length=20, create_constraint=False),
