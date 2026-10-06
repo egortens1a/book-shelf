@@ -1,7 +1,7 @@
 import enum
 from sqlalchemy import BigInteger, SmallInteger, Identity, String, Enum, ForeignKey, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
-from app.core.base import Base
+from app.core.base import Base, enum_check
 from datetime import datetime
 
 class UserStatus(str, enum.Enum):
@@ -10,6 +10,9 @@ class UserStatus(str, enum.Enum):
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (
+        enum_check("status", UserStatus, "user_status"),
+    )
     
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     full_name: Mapped[str] = mapped_column(String(255))
@@ -19,7 +22,7 @@ class User(Base):
             SmallInteger, ForeignKey("roles.id", ondelete="RESTRICT"), index=True
         )
     status: Mapped[UserStatus] = mapped_column(Enum(UserStatus, native_enum=False, length=20,
-                                                    create_constraint=True, name="user_status"),
+                                                    create_constraint=False),
                                                default=UserStatus.ACTIVE,
                                                server_default=UserStatus.ACTIVE.value)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
