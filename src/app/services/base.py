@@ -14,12 +14,8 @@ class BaseService:
 
     @asynccontextmanager
     async def _transaction(self) -> AsyncGenerator[None, None]:
-        try:
+        async with self.session.begin_nested():
             yield
-            await self.session.commit()
-        except Exception:
-            await self.session.rollback()
-            raise
 
     async def _require_role(self, user_id: int, *roles: RoleTypes) -> None:
         """Пользователь существует, не заблокирован и имеет одну из ролей"""

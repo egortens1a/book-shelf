@@ -1,3 +1,7 @@
+"""Сценарии блока А. Нужны данные seed (python -m app.scripts.seed).
+
+Запуск (из каталога src):  python -m app.scripts.demo_catalog
+"""
 import asyncio
 import uuid
 from contextlib import asynccontextmanager
@@ -26,6 +30,7 @@ def ok(msg: str) -> None:
 
 
 async def refuse(label: str, coro, exc=ValueError) -> None:
+    """Сценарий отказа: операция обязана упасть с ожидаемой ошибкой."""
     try:
         await coro
     except exc as e:
@@ -36,6 +41,7 @@ async def refuse(label: str, coro, exc=ValueError) -> None:
 
 @asynccontextmanager
 async def services(sf):
+    """Свежая сессия и сервисы. После отказов берём из объектов только id."""
     async with sf() as s:
         subs, res = SubscriptionService(s), ReservationService(s)
         yield SimpleNamespace(
@@ -77,7 +83,9 @@ async def run_block_a(sf=session_factory) -> None:
         await refuse("дубликат жанра", sv.directory.create_genre(admin, f"Временный Жанр {tag}"))
         await sv.directory.delete_genre(admin, genre_id)
 
-        print("\n2. Каталог ")
+        await sv.session.commit()
+
+        print("\n2. Каталог")
         await refuse("FREE без текста", sv.catalog.create_book_draft(
             "Без текста", "Описание", [lem], [classic], AccessType.FREE))
         free = (await sv.catalog.create_book_draft(
@@ -92,6 +100,8 @@ async def run_block_a(sf=session_factory) -> None:
         ok("опубликованные книги находятся поиском")
         await refuse("повторная публикация", sv.catalog.publish_book(free))
         await refuse("удаление опубликованной книги", sv.catalog.delete_draft(free))
+
+        await sv.session.commit()
 
         print("\n3. Чтение и оценки (подписка из блока Б)")
         n = len(TEXT)
@@ -112,6 +122,8 @@ async def run_block_a(sf=session_factory) -> None:
         ok("сводка: 1 оценка, средний балл 9.0")
         assert await sv.wishlist.add(r1, sub) and not await sv.wishlist.add(r1, sub)
         ok("в хочу прочитать дубликат не добавляется")
+
+        await sv.session.commit()
 
         print("\n4. Бумажная книга (стык с блоком Б)")
         paper = (await sv.catalog.create_book_draft(
@@ -137,10 +149,13 @@ async def run_block_a(sf=session_factory) -> None:
         await sv.catalog.delete_draft(draft)
         ok("черновик удалён вместе с экземпляром")
 
+        await sv.session.commit()
+
         print("\n5. Статистика")
         stats = await sv.stats.get_catalog_stats(admin)
         ok(f"книги по статусам: {stats['books_by_status']}")
         await refuse("читатель просит статистику", sv.stats.get_catalog_stats(r1), PermissionError)
+        await sv.session.commit()
     print("\nСценарии блока А выполнены.")
 
 
