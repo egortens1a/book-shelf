@@ -1,0 +1,11 @@
+.env
+.venv/
+commands*
+
+__pycache__/
+*.pyc
+
+.idea/
+.vscode/
+
+*.egg-info/
