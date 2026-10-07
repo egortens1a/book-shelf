@@ -1,31 +1,43 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Enum, Identity, Integer, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import BigInteger, CheckConstraint, DateTime, Enum, Identity, Integer, String, Text, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.base import Base, enum_check
+
 
 class BookStatus(str, enum.Enum):
     DRAFT = "DRAFT"
     PUBLISHED = "PUBLISHED"
     ARCHIVED = "ARCHIVED"
-    
+
+
 class AccessType(str, enum.Enum):
     FREE = "FREE"
     SUBSCRIPTION = "SUBSCRIPTION"
     NONE = "NONE"
-    
+
+
 class Book(Base):
     __tablename__ = "books"
     __table_args__ = (
         enum_check("access_type", AccessType, "access_type"),
-        enum_check("status", BookStatus, "book_status")
-        )
-    
+        enum_check("status", BookStatus, "book_status"),
+        # text_content пуст только при access_type = NONE.
+        # Имя без префикса ck_: его добавляет naming convention.
+        CheckConstraint(
+            "(access_type = 'NONE' AND text_content IS NULL) "
+            "OR (access_type <> 'NONE' AND text_content IS NOT NULL)",
+            name="text_content_by_access_type",
+        ),
+    )
+    authors = relationship("Author", secondary="book_author", back_populates="books")
+    genres = relationship("Genre", secondary="book_genre", back_populates="books")
+
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     title: Mapped[str] = mapped_column(String(255))
-    description: Mapped[str] = mapped_column(Text, default="", server_default="")
+    description: Mapped[str] = mapped_column(Text, nullable=False)
     publication_year: Mapped[int | None] = mapped_column(Integer)
     access_type: Mapped[AccessType] = mapped_column(
         Enum(AccessType, native_enum=False, length=20, create_constraint=False),
@@ -35,7 +47,9 @@ class Book(Base):
         Enum(BookStatus, native_enum=False, length=20, create_constraint=False),
         default=BookStatus.DRAFT, server_default=BookStatus.DRAFT.value
     )
-    text_content: Mapped[str | None] = mapped_column(Text, 
-                                                     default=None)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), 
+    # В выборки он не попадет, поэтому читать через BookRepository.get_text_content().
+    text_content: Mapped[str | None] = mapped_column(
+        Text, default=None, deferred=True, deferred_raiseload=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),
                                                  server_default=func.now())
