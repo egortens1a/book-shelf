@@ -10,14 +10,14 @@ from types import SimpleNamespace
 from app.core.db import engine, session_factory
 from app.models import AccessType
 from app.repositories import AuthorRepository, GenreRepository, UserRepository
-from app.services.book_copy import BookCopyService
+from app.services.book_copy_service import BookCopyService
 from app.services.catalog_service import CatalogService
 from app.services.directory_service import DirectoryService
 from app.services.rating_service import RatingService
 from app.services.reading_service import ReadingService
-from app.services.reservation import ReservationService
+from app.services.reservation_service import ReservationService
 from app.services.stats_service import StatsService
-from app.services.subscription import SubscriptionService
+from app.services.subscription_service import SubscriptionService
 from app.services.user_service import UserService
 from app.services.wishlist_service import WishlistService
 
