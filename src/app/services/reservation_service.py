@@ -24,6 +24,7 @@ from app.services.errors import (
     PickupExpired,
     ReservationNotFound,
     TooManyReservations,
+    UserNotFound,
 )
 from app.services.fine_service import FineService
 from app.services.subscription_service import SubscriptionService
@@ -116,34 +117,42 @@ class ReservationService(BaseService):
         """
         await self.expire_stale_pickups()
 
-        book = await self.book_repo.get_by_id(book_id)
-        if book is None:
-            raise BookNotFound(f"Книга {book_id} не найдена")
-        if book.status is not BookStatus.PUBLISHED:
-            raise BookNotPublished(
-                f"Книга «{book.title}» не опубликована, бронировать её нельзя"
-            )
-
-        if not await self._subscriptions.has_active(user_id):
-            raise NoActiveSubscription(
-                "Бронирование доступно только по действующей подписке"
-            )
-        if await self.has_overdue(user_id):
-            raise HasOverdueLoan("Сначала верните книгу, срок чтения которой истёк")
-        if await self.fine_repo.has_unpaid(user_id):
-            raise HasUnpaidFine("Сначала оплатите начисленный штраф")
-
-        limit = self._settings.max_active_reservations
-        if await self.active_count(user_id) >= limit:
-            raise TooManyReservations(
-                f"Одновременно можно держать не больше {limit} книг"
-            )
-        if await self.reservation_repo.holds_book(user_id, book_id):
-            raise AlreadyReserved(
-                f"Экземпляр книги «{book.title}» уже закреплён за вами"
-            )
-
         async with self._transaction():
+            # Блокировка строки читателя до конца транзакции. Без неё один
+            # читатель из двух сессий проходит проверку лимита дважды: обе
+            # видят одно и то же число активных броней и обе создают новую.
+            if await self.user_repo.get_for_update(user_id) is None:
+                raise UserNotFound(f"Пользователь {user_id} не найден")
+
+            book = await self.book_repo.get_by_id(book_id)
+            if book is None:
+                raise BookNotFound(f"Книга {book_id} не найдена")
+            if book.status is not BookStatus.PUBLISHED:
+                raise BookNotPublished(
+                    f"Книга «{book.title}» не опубликована, бронировать её нельзя"
+                )
+
+            if not await self._subscriptions.has_active(user_id):
+                raise NoActiveSubscription(
+                    "Бронирование доступно только по действующей подписке"
+                )
+            if await self.has_overdue(user_id):
+                raise HasOverdueLoan(
+                    "Сначала верните книгу, срок чтения которой истёк"
+                )
+            if await self.fine_repo.has_unpaid(user_id):
+                raise HasUnpaidFine("Сначала оплатите начисленный штраф")
+
+            limit = self._settings.max_active_reservations
+            if await self.active_count(user_id) >= limit:
+                raise TooManyReservations(
+                    f"Одновременно можно держать не больше {limit} книг"
+                )
+            if await self.reservation_repo.holds_book(user_id, book_id):
+                raise AlreadyReserved(
+                    f"Экземпляр книги «{book.title}» уже закреплён за вами"
+                )
+
             copy = await self.copy_repo.lock_free(book_id)
             if copy is None:
                 raise NoCopyAvailable(

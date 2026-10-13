@@ -1,3 +1,4 @@
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import BookCopy, CopyStatus
@@ -39,12 +40,18 @@ class BookCopyService(BaseService):
         if await self.book_repo.get_by_id(book_id) is None:
             raise BookNotFound(f"Книга {book_id} не найдена")
 
-        async with self._transaction():
-            if await self.copy_repo.inventory_number_taken(inventory_number):
-                raise DuplicateInventoryNumber(
-                    f"Инвентарный номер {inventory_number} уже занят"
-                )
-            return await self.copy_repo.create(book_id, inventory_number)
+        taken_message = f"Инвентарный номер {inventory_number} уже занят"
+        try:
+            async with self._transaction():
+                # Проверка даёт понятный отказ в обычном случае, но между ней
+                # и вставкой другой библиотекарь может занять тот же номер.
+                # Тогда сработает uq_book_copies_inventory_number, и ошибку
+                # целостности надо перевести в ту же доменную ошибку.
+                if await self.copy_repo.inventory_number_taken(inventory_number):
+                    raise DuplicateInventoryNumber(taken_message)
+                return await self.copy_repo.create(book_id, inventory_number)
+        except IntegrityError as exc:
+            raise DuplicateInventoryNumber(taken_message) from exc
 
     async def write_off(self, copy_id: int) -> BookCopy:
         """Списывает экземпляр: ветхий, утерянный или выбывший иначе.
