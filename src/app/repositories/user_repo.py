@@ -18,6 +18,14 @@ class UserRepository:
         result = await self.session.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
+    async def get_for_update(self, user_id: int) -> User | None:
+        """Читатель с блокировкой строки до конца транзакции.
+
+        Нужен сервису подписок: два одновременных оформления одним
+        читателем выстраиваются в очередь, а не дерутся за уникальный индекс.
+        """
+        return await self.session.get(User, user_id, with_for_update=True)
+
     async def get_by_email(self, email: str) -> User | None:
         result = await self.session.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
