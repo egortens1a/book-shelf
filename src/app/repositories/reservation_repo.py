@@ -33,48 +33,37 @@ class ReservationRepository:
 
     async def get_for_update(self, reservation_id: int) -> Reservation | None:
         """Бронь с блокировкой строки до конца транзакции."""
-        return await self.session.get(
-            Reservation, reservation_id, with_for_update=True
-        )
+        return await self.session.get(Reservation, reservation_id, with_for_update=True)
+
+    async def _exists_where(self, *conditions) -> bool:
+        """EXISTS по условиям; в запросе нет ничего, кроме самих условий."""
+        return bool(await self.session.scalar(select(exists().where(*conditions))))
 
     async def count_active(self, user_id: int) -> int:
         """Сколько броней и выдач у читателя на руках прямо сейчас."""
-        result = await self.session.execute(
-            select(func.count())
-            .select_from(Reservation)
-            .where(
+        return await self.session.scalar(
+            select(func.count(Reservation.id)).where(
                 Reservation.user_id == user_id,
                 Reservation.status.in_(ACTIVE_STATUSES),
             )
         )
-        return result.scalar_one()
 
     async def has_overdue(self, user_id: int, now: datetime) -> bool:
         """Есть ли невозвращённая книга с истёкшим сроком чтения."""
-        result = await self.session.execute(
-            select(
-                exists().where(
-                    Reservation.user_id == user_id,
-                    Reservation.status == ReservationStatus.ISSUED,
-                    Reservation.due_date <= now,
-                )
-            )
+        return await self._exists_where(
+            Reservation.user_id == user_id,
+            Reservation.status == ReservationStatus.ISSUED,
+            Reservation.due_date <= now,
         )
-        return bool(result.scalar_one())
 
     async def holds_book(self, user_id: int, book_id: int) -> bool:
         """Закреплён ли за читателем экземпляр этой книги прямо сейчас."""
-        result = await self.session.execute(
-            select(
-                exists().where(
-                    Reservation.user_id == user_id,
-                    Reservation.status.in_(ACTIVE_STATUSES),
-                    Reservation.copy_id == BookCopy.id,
-                    BookCopy.book_id == book_id,
-                )
-            )
+        return await self._exists_where(
+            Reservation.user_id == user_id,
+            Reservation.status.in_(ACTIVE_STATUSES),
+            Reservation.copy_id == BookCopy.id,
+            BookCopy.book_id == book_id,
         )
-        return bool(result.scalar_one())
 
     async def has_returned(self, user_id: int, book_id: int) -> bool:
         """Брал ли читатель бумажный экземпляр книги и вернул ли его.
@@ -82,17 +71,12 @@ class ReservationRepository:
         Утерянная книга возвращённой не считается: такая бронь закрывается
         статусом LOST, которого в условии нет.
         """
-        result = await self.session.execute(
-            select(
-                exists().where(
-                    Reservation.user_id == user_id,
-                    Reservation.status == ReservationStatus.RETURNED,
-                    Reservation.copy_id == BookCopy.id,
-                    BookCopy.book_id == book_id,
-                )
-            )
+        return await self._exists_where(
+            Reservation.user_id == user_id,
+            Reservation.status == ReservationStatus.RETURNED,
+            Reservation.copy_id == BookCopy.id,
+            BookCopy.book_id == book_id,
         )
-        return bool(result.scalar_one())
 
     async def lock_stale_pickups(self, now: datetime) -> list[Reservation]:
         """Брони, которые не забрали в срок, с блокировкой строк.
@@ -100,7 +84,7 @@ class ReservationRepository:
         SKIP LOCKED нужен, чтобы параллельный вызов не ждал те же строки:
         пропущенные брони истекут при следующем обращении.
         """
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(Reservation)
             .where(
                 Reservation.status == ReservationStatus.CREATED,
@@ -108,12 +92,12 @@ class ReservationRepository:
             )
             .with_for_update(skip_locked=True)
         )
-        return list(result.scalars().all())
+        return list(result.all())
 
     async def list_by_user(self, user_id: int) -> list[Reservation]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(Reservation)
             .where(Reservation.user_id == user_id)
             .order_by(Reservation.created_at)
         )
-        return list(result.scalars().all())
+        return list(result.all())

@@ -6,6 +6,8 @@ from app.models import RoleTypes
 from app.repositories import StatsRepository
 from app.services.base import BaseService
 
+from app.models import Book
+
 
 class StatsService(BaseService):
     def __init__(self, session: AsyncSession):
@@ -25,3 +27,8 @@ class StatsService(BaseService):
             "ratings_count": ratings_count,
             "ratings_average": round(float(ratings_avg), 2) if ratings_avg is not None else None,
         }
+        
+    async def top_k_book_by_genre(self, k: int, genre_id: int) -> list[tuple[str, float, int]]:
+        return await self.stats_repo.get_top_by_genre(
+            genre_id=genre_id, limit=k
+        )

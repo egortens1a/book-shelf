@@ -1,4 +1,4 @@
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.text import normalize_name
@@ -16,20 +16,16 @@ class GenreRepository:
         return genre
 
     async def get_by_id(self, genre_id: int) -> Genre | None:
-        result = await self.session.execute(
-            select(Genre).where(Genre.id == genre_id)
-        )
-        return result.scalar_one_or_none()
+        return await self.session.get(Genre, genre_id)
 
     async def get_by_name(self, name: str) -> Genre | None:
-        result = await self.session.execute(
+        return await self.session.scalar(
             select(Genre).where(Genre.name == normalize_name(name))
         )
-        return result.scalar_one_or_none()
 
     async def get_all(self) -> list[Genre]:
-        result = await self.session.execute(select(Genre).order_by(Genre.name))
-        return list(result.scalars().all())
+        result = await self.session.scalars(select(Genre).order_by(Genre.name))
+        return list(result.all())
 
     async def rename(self, genre_id: int, new_name: str) -> Genre:
         genre = await self.get_by_id(genre_id)
@@ -40,6 +36,8 @@ class GenreRepository:
         return genre
 
     async def delete(self, genre_id: int) -> None:
-        result = await self.session.execute(delete(Genre).where(Genre.id == genre_id))
-        if result.rowcount == 0:
+        genre = await self.get_by_id(genre_id)
+        if genre is None:
             raise ValueError("Жанр не найден")
+        await self.session.delete(genre)
+        await self.session.flush()

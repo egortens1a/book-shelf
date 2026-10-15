@@ -33,33 +33,31 @@ class FineRepository:
 
     async def has_unpaid(self, user_id: int) -> bool:
         """Неоплаченный штраф закрывает читателю новые брони."""
-        result = await self.session.execute(
-            select(
-                exists().where(
-                    Fine.status == FineStatus.UNPAID,
-                    Fine.reservation_id == Reservation.id,
-                    Reservation.user_id == user_id,
+        return bool(
+            await self.session.scalar(
+                select(
+                    exists().where(
+                        Fine.status == FineStatus.UNPAID,
+                        Fine.reservation_id == Reservation.id,
+                        Reservation.user_id == user_id,
+                    )
                 )
             )
         )
-        return bool(result.scalar_one())
 
     async def list_unpaid(self, user_id: int) -> list[Fine]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(Fine)
             .join(Reservation, Reservation.id == Fine.reservation_id)
-            .where(
-                Reservation.user_id == user_id,
-                Fine.status == FineStatus.UNPAID,
-            )
+            .where(Reservation.user_id == user_id, Fine.status == FineStatus.UNPAID)
             .order_by(Fine.created_at)
         )
-        return list(result.scalars().all())
+        return list(result.all())
 
     async def list_by_reservation(self, reservation_id: int) -> list[Fine]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(Fine)
             .where(Fine.reservation_id == reservation_id)
             .order_by(Fine.created_at)
         )
-        return list(result.scalars().all())
+        return list(result.all())

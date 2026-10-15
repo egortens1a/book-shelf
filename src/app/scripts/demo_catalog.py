@@ -112,14 +112,14 @@ async def run_block_a(sf=session_factory) -> None:
         ok("с подпиской подписная книга читается")
         await sv.reading.save_position(r1, free, n // 2)
         await refuse("позиция за пределами текста", sv.reading.save_position(r1, free, n + 1))
-        await refuse("оценка недочитанной книги", sv.rating.rate(r1, free, 9))
+        await refuse("оценка недочитанной книги", sv.rating.rate(r1, free, 3))
         assert (await sv.reading.save_position(r1, free, n)).finished_at is not None
-        rating = await sv.rating.rate(r1, free, 9, " Отлично ")
+        rating = await sv.rating.rate(r1, free, 3, " Отлично ")
         ok(f"дочитал и оценил: {rating.score}, {rating.comment}")
         await refuse("оценка 11", sv.rating.rate(r1, free, 11))
         summary = await sv.rating.get_book_summary(free)
-        assert (summary.count, summary.average) == (1, 9.0)
-        ok("сводка: 1 оценка, средний балл 9.0")
+        assert (summary.count, summary.average) == (1, 3.0)
+        ok("сводка: 1 оценка, средний балл 3.0")
         assert await sv.wishlist.add(r1, sub) and not await sv.wishlist.add(r1, sub)
         ok("в хочу прочитать дубликат не добавляется")
 
@@ -140,7 +140,7 @@ async def run_block_a(sf=session_factory) -> None:
         await refuse("оценка до возврата книги", sv.rating.rate(r1, paper, 10))
         await sv.res.return_book(reservation)
         await sv.session.commit()
-        await sv.rating.rate(r1, paper, 10)
+        await sv.rating.rate(r1, paper, 4)
         ok("после возврата экземпляра оценка принята")
         draft = (await sv.catalog.create_book_draft(
             f"Черновик {tag}", "Описание", [lem], [classic])).id
@@ -153,9 +153,18 @@ async def run_block_a(sf=session_factory) -> None:
 
         print("\n5. Статистика")
         stats = await sv.stats.get_catalog_stats(admin)
+        
         ok(f"книги по статусам: {stats['books_by_status']}")
         await refuse("читатель просит статистику", sv.stats.get_catalog_stats(r1), PermissionError)
         await sv.session.commit()
+        
+        print("\n 6. Топ 3 книга")
+        stat_one =  await sv.stats.top_k_book_by_genre(k = 3, genre_id = 1)
+        for book, avg, cnt in stat_one:
+            print(book, avg, cnt)
+        
+        
+        
     print("\nСценарии блока А выполнены.")
 
 

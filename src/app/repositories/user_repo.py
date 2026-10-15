@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models import Role, RoleTypes, User, UserStatus
 
 
@@ -15,26 +16,20 @@ class UserRepository:
         return user
 
     async def get_by_id(self, user_id: int) -> User | None:
-        result = await self.session.execute(select(User).where(User.id == user_id))
-        return result.scalar_one_or_none()
+        return await self.session.get(User, user_id)
 
     async def get_for_update(self, user_id: int) -> User | None:
-        """Читатель с блокировкой строки до конца транзакции.
-
-        Нужен сервису подписок: два одновременных оформления одним
-        читателем выстраиваются в очередь, а не дерутся за уникальный индекс.
-        """
         return await self.session.get(User, user_id, with_for_update=True)
 
     async def get_by_email(self, email: str) -> User | None:
-        result = await self.session.execute(select(User).where(User.email == email))
-        return result.scalar_one_or_none()
+        return (
+            await self.session.execute(select(User).where(User.email == email))
+        ).scalar_one_or_none()
 
     async def get_role_name(self, user_id: int) -> RoleTypes | None:
-        result = await self.session.execute(
-            select(Role.name).join(User, User.role_id == Role.id).where(User.id == user_id)
-        )
-        return result.scalar_one_or_none()
+        return (await self.session.execute(
+            select(Role.name).join(User, User.role_id == Role.id).where(User.id == user_id))
+        ).scalar_one_or_none()
 
     async def set_status(self, user_id: int, status: UserStatus | str) -> User:
         user = await self.get_by_id(user_id)
@@ -48,4 +43,4 @@ class UserRepository:
         result = await self.session.execute(
             select(User).order_by(User.id).limit(limit).offset(offset)
         )
-        return list(result.scalars().all())
+        return list(result.scalars())

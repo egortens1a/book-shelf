@@ -16,3 +16,5 @@ recsys/
 artifacts/
 notebooks/
 .gitignore
+
+.VSCodeCounter/

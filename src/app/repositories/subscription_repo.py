@@ -37,7 +37,7 @@ class SubscriptionRepository:
         Отбор идёт по датам, а не по статусу: PENDING включён на случай,
         если ленивый перевод статусов ещё не отработал.
         """
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(Subscription).where(
                 Subscription.user_id == user_id,
                 Subscription.status.in_(
@@ -47,18 +47,18 @@ class SubscriptionRepository:
                 Subscription.expires_at > now,
             )
         )
-        return result.scalar_one_or_none()
+        return result.one_or_none()
 
     async def get_queued(self, user_id: int, now: datetime) -> Subscription | None:
         """Оплаченное продление, которое ещё не вступило в силу."""
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(Subscription).where(
                 Subscription.user_id == user_id,
                 Subscription.status == SubscriptionStatus.PENDING,
                 Subscription.started_at > now,
             )
         )
-        return result.scalar_one_or_none()
+        return result.one_or_none()
 
     async def expire_outdated(self, user_id: int, now: datetime) -> None:
         """Закрывает подписки, срок которых истёк."""
@@ -89,9 +89,9 @@ class SubscriptionRepository:
         )
 
     async def list_by_user(self, user_id: int) -> list[Subscription]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(Subscription)
             .where(Subscription.user_id == user_id)
             .order_by(Subscription.started_at)
         )
-        return list(result.scalars().all())
+        return list(result.all())
