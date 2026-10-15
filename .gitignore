@@ -9,3 +9,12 @@ __pycache__/
 .vscode/
 
 *.egg-info/
+
+data/
+ml/
+recsys/
+artifacts/
+notebooks/
+.gitignore
+
+.VSCodeCounter/
