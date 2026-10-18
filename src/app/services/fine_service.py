@@ -7,7 +7,7 @@ from app.core.config import get_settings
 from app.models import Fine, FineReason, FineStatus, Reservation
 from app.repositories import FineRepository
 from app.services.base import BaseService
-from app.services.errors import FineNotFound
+from app.core.errors import FineNotFound
 
 
 class FineService(BaseService):

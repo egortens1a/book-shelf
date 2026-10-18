@@ -6,7 +6,7 @@ from app.core.config import get_settings
 from app.models import Subscription, SubscriptionStatus
 from app.repositories import SubscriptionRepository
 from app.services.base import BaseService
-from app.services.errors import SubscriptionAlreadyQueued, UserNotFound
+from app.core.errors import SubscriptionAlreadyQueued, UserNotFound
 
 
 class SubscriptionService(BaseService):

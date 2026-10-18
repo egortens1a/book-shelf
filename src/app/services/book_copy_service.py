@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import BookCopy, CopyStatus
 from app.repositories import BookCopyRepository, BookRepository
 from app.services.base import BaseService
-from app.services.errors import (
+from app.core.errors import (
     BookNotFound,
     CopyNotAvailable,
     CopyNotFound,
@@ -72,7 +72,7 @@ class BookCopyService(BaseService):
             await self.session.flush()
             return copy
 
-    async def count_available(self, book_id: int) -> int:
+    async def count_available(self, book_id: int) -> int|None:
         """Сколько экземпляров книги сейчас свободно - для карточки книги."""
         return await self.copy_repo.count_available(book_id)
 

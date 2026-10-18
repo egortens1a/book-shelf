@@ -12,7 +12,7 @@ from app.repositories import (
 )
 from app.services.base import BaseService
 from app.services.book_copy_service import BookCopyService
-from app.services.errors import (
+from app.core.errors import (
     AlreadyReserved,
     BookNotFound,
     BookNotPublished,

@@ -16,7 +16,7 @@ from app.core.db import engine, session_factory
 from app.models import Book, Reservation, User
 from app.scripts.seed_loans import clear_previous, seed
 from app.services.book_copy_service import BookCopyService
-from app.services.errors import ServiceError
+from app.core.errors import ServiceError
 from app.services.fine_service import FineService
 from app.services.reservation_service import ReservationService
 from app.services.subscription_service import SubscriptionService
