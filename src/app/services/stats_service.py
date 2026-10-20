@@ -26,6 +26,12 @@ class StatsService(BaseService):
             "users_by_status": await self.stats_repo.users_by_status(),
             "ratings_count": ratings_count,
             "ratings_average": round(float(ratings_avg), 2) if ratings_avg is not None else None,
+            # README требует статистику «по каталогу, выдачам и подпискам»,
+            # поэтому одного каталога с пользователями недостаточно.
+            "reservations_by_status": await self.stats_repo.reservations_by_status(),
+            "subscriptions_by_status": await self.stats_repo.subscriptions_by_status(),
+            "fines_by_status": await self.stats_repo.fines_by_status(),
+            "unpaid_fines_total": await self.stats_repo.unpaid_fines_total(),
         }
         
     async def top_k_book_by_genre(self, k: int, genre_id: int) -> list[tuple[str, float, int]]:

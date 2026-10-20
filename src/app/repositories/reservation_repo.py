@@ -2,12 +2,17 @@ from datetime import datetime
 
 from sqlalchemy import exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models import BookCopy, Reservation, ReservationStatus
 
 #: Бронь занимает экземпляр, пока находится в одном из этих состояний.
 #: Тот же набор зашит в частичный индекс uq_reservations_copy_active.
 ACTIVE_STATUSES = (ReservationStatus.CREATED, ReservationStatus.ISSUED)
+
+#: Для карточки брони нужны инвентарный номер и название книги. Связи
+#: объявлены с lazy="raise", поэтому без этих опций DTO не собрать.
+_CARD_OPTIONS = (selectinload(Reservation.copy).selectinload(BookCopy.book),)
 
 
 class ReservationRepository:
@@ -39,14 +44,18 @@ class ReservationRepository:
         """EXISTS по условиям; в запросе нет ничего, кроме самих условий."""
         return bool(await self.session.scalar(select(exists().where(*conditions))))
 
-    async def count_active(self, user_id: int) -> int | None:
-        """Сколько броней и выдач у читателя на руках прямо сейчас."""
+    async def count_active(self, user_id: int) -> int:
+        """Сколько броней и выдач у читателя на руках прямо сейчас.
+
+        COUNT всегда возвращает строку, поэтому None здесь невозможен;
+        `or 0` стоит лишь ради честной аннотации типа.
+        """
         return await self.session.scalar(
             select(func.count(Reservation.id)).where(
                 Reservation.user_id == user_id,
                 Reservation.status.in_(ACTIVE_STATUSES),
             )
-        )
+        ) or 0
 
     async def has_overdue(self, user_id: int, now: datetime) -> bool:
         """Есть ли невозвращённая книга с истёкшим сроком чтения."""
@@ -95,9 +104,41 @@ class ReservationRepository:
         return list(result.all())
 
     async def list_by_user(self, user_id: int) -> list[Reservation]:
+        """История броней читателя, от новых к старым."""
         result = await self.session.scalars(
             select(Reservation)
+            .options(*_CARD_OPTIONS)
             .where(Reservation.user_id == user_id)
-            .order_by(Reservation.created_at)
+            .order_by(Reservation.created_at.desc(), Reservation.id.desc())
         )
+        return list(result.all())
+
+    async def list_filtered(
+        self,
+        status: ReservationStatus | None = None,
+        user_id: int | None = None,
+        inventory_number: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[Reservation]:
+        """Список броней для библиотекаря.
+
+        Фильтр по инвентарному номеру требует соединения с экземпляром,
+        поэтому join добавляется только когда он действительно нужен.
+        """
+        query = select(Reservation).options(*_CARD_OPTIONS)
+        if status is not None:
+            query = query.where(Reservation.status == status)
+        if user_id is not None:
+            query = query.where(Reservation.user_id == user_id)
+        if inventory_number:
+            query = query.join(BookCopy, BookCopy.id == Reservation.copy_id).where(
+                BookCopy.inventory_number == inventory_number.strip()
+            )
+        query = (
+            query.order_by(Reservation.created_at.desc(), Reservation.id.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        result = await self.session.scalars(query)
         return list(result.all())

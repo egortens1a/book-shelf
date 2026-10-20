@@ -1,10 +1,15 @@
 import enum
 from datetime import datetime
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Identity, Index, func, text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.base import Base, enum_check
+
+if TYPE_CHECKING:
+    from app.models.book_copy import BookCopy
 
 
 class ReservationStatus(str, enum.Enum):
@@ -27,6 +32,12 @@ class Reservation(Base):
             postgresql_where=text("status IN ('CREATED', 'ISSUED')"),
         ),
     )
+
+    # Связь только в одну сторону: от брони к экземпляру. Обратная сторона
+    # не нужна, поэтому back_populates не задаём. lazy="raise" запрещает
+    # ленивую подгрузку: без явного selectinload обращение к copy даст
+    # понятную ошибку, а не MissingGreenlet из глубины сериализатора.
+    copy: Mapped["BookCopy"] = relationship(lazy="raise")
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     user_id: Mapped[int] = mapped_column(

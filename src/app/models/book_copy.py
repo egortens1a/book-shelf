@@ -1,10 +1,15 @@
 import enum
 from datetime import datetime
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Identity, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.base import Base, enum_check
+
+if TYPE_CHECKING:
+    from app.models.book import Book
 
 
 class CopyStatus(str, enum.Enum):
@@ -20,6 +25,10 @@ class BookCopy(Base):
     __table_args__ = (
         enum_check("status", CopyStatus, "copy_status"),
     )
+
+    # Нужна, чтобы в карточке брони показать название книги. Односторонняя,
+    # lazy="raise" - см. комментарий у Reservation.copy.
+    book: Mapped["Book"] = relationship(lazy="raise")
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     book_id: Mapped[int] = mapped_column(

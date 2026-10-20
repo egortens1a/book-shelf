@@ -54,6 +54,16 @@ class FineRepository:
         )
         return list(result.all())
 
+    async def list_by_user(self, user_id: int) -> list[Fine]:
+        """Все штрафы читателя, включая оплаченные, от новых к старым."""
+        result = await self.session.scalars(
+            select(Fine)
+            .join(Reservation, Reservation.id == Fine.reservation_id)
+            .where(Reservation.user_id == user_id)
+            .order_by(Fine.created_at.desc(), Fine.id.desc())
+        )
+        return list(result.all())
+
     async def list_by_reservation(self, reservation_id: int) -> list[Fine]:
         result = await self.session.scalars(
             select(Fine)
