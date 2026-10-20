@@ -9,6 +9,7 @@ __pycache__/
 .vscode/
 
 *.egg-info/
+<<<<<<< HEAD
 .VSCodeCounter/
 data/
 
@@ -16,3 +17,14 @@ data/
 ml/
 notebooks/
 recsys/
+=======
+
+data/
+ml/
+recsys/
+artifacts/
+notebooks/
+.gitignore
+
+.VSCodeCounter/
+>>>>>>> dev

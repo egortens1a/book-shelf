@@ -1,6 +1,6 @@
-from sqlalchemy import delete, select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models import UserGenre
 
 
@@ -9,28 +9,24 @@ class UserGenreRepository:
         self.session = session
 
     async def get_genre_ids(self, user_id: int) -> list[int]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(UserGenre.genre_id)
             .where(UserGenre.user_id == user_id)
             .order_by(UserGenre.genre_id)
         )
-        return list(result.scalars().all())
+        return list(result.all())
 
     async def replace(self, user_id: int, genre_ids: list[int]) -> None:
         wanted = set(genre_ids)
-        current = set(await self.get_genre_ids(user_id))
+        rows = (
+            await self.session.scalars(select(UserGenre).where(UserGenre.user_id == user_id))
+        ).all()
+        current = {row.genre_id for row in rows}
 
-        stale = current - wanted
-        if stale:
-            await self.session.execute(
-                delete(UserGenre).where(
-                    UserGenre.user_id == user_id, UserGenre.genre_id.in_(stale)
-                )
-            )
-        missing = wanted - current
-        if missing:
-            await self.session.execute(
-                pg_insert(UserGenre)
-                .values([{"user_id": user_id, "genre_id": g} for g in sorted(missing)])
-                .on_conflict_do_nothing(index_elements=[UserGenre.user_id, UserGenre.genre_id])
-            )
+        for row in rows:
+            if row.genre_id not in wanted:
+                await self.session.delete(row)
+        self.session.add_all(
+            UserGenre(user_id=user_id, genre_id=g) for g in sorted(wanted - current)
+        )
+        await self.session.flush()

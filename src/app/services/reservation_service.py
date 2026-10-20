@@ -70,9 +70,13 @@ class ReservationService(BaseService):
 
     async def active_count(self, user_id: int) -> int:
         """Сколько броней и выдач у читателя на руках прямо сейчас."""
+<<<<<<< HEAD
         count = await self.reservation_repo.count_active(user_id)
         if count is None: raise UserNotFound
         return count
+=======
+        return await self.reservation_repo.count_active(user_id)
+>>>>>>> dev
 
     async def has_overdue(self, user_id: int) -> bool:
         """Есть ли невозвращённая книга с истёкшим сроком чтения."""

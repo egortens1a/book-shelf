@@ -15,11 +15,11 @@ from sqlalchemy import select
 from app.core.db import engine, session_factory
 from app.models import Book, Reservation, User
 from app.scripts.seed_loans import clear_previous, seed
-from app.services.book_copy import BookCopyService
-from app.services.errors import ServiceError
-from app.services.fine import FineService
-from app.services.reservation import ReservationService
-from app.services.subscription import SubscriptionService
+from app.services.book_copy_service import BookCopyService
+from app.core.errors import ServiceError
+from app.services.fine_service import FineService
+from app.services.reservation_service import ReservationService
+from app.services.subscription_service import SubscriptionService
 
 # В db.py echo зашит жёстко, иначе вывод тонет в SQL.
 engine.echo = False

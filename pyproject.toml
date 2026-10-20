@@ -6,29 +6,44 @@ build-backend = "setuptools.build_meta"
 name = "bookshelf"
 version = "0.1.0"
 requires-python = ">=3.11"
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 
 =======
 dependencies = [
     "fastapi >= 0.144.0",
     "uvicorn >= 0.54.0",
+=======
+dependencies = [
+>>>>>>> dev
     "sqlalchemy[asyncio]>=2.0",
     "asyncpg>=0.29",
     "pydantic-settings>=2.0",
     "alembic>=1.13",
     "bcrypt>=4.0",
 ]
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+>>>>>>> dev
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
+    "jupyter>=1.0.0",
+    "notebook>=7.0",
+    "ipykernel>=6.29",
+    "pandas>=3.0.6",
+    "matplotlib>=3.11.2",
+    "scikit-learn>=1.9.1",
+    "fastembed>=0.9.0",
+    "numpy>=1.26.0"
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["app*", "tests*"]
+include = ["app*", "recsys"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
