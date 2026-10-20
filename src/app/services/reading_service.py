@@ -2,6 +2,12 @@ from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import (
+    BookNotFound,
+    Conflict,
+    InvalidInput,
+    NoActiveSubscription,
+)
 from app.models import AccessType, Book, BookStatus
 from app.models.user_book_relations import ReadingProgress
 from app.repositories import BookRepository, ReadingProgressRepository
@@ -20,21 +26,23 @@ class ReadingService(BaseService):
         self.subscription_checker = subscription_checker
 
     async def _get_readable_book(self, user_id: int, book_id: int) -> Book:
-        """Книга, которую этот читатель вправе читать сейчас, иначе ValueError."""
+        """Книга, которую этот читатель вправе читать сейчас.
+
+        Черновик для читателя неотличим от несуществующей книги: сообщение
+        одинаковое, чтобы не раскрывать наличие неопубликованных записей.
+        """
         book = await self.book_repo.get_by_id(book_id)
         if book is None or book.status == BookStatus.DRAFT:
-            raise ValueError("Книга не найдена")
+            raise BookNotFound("Книга не найдена")
         if book.access_type == AccessType.NONE:
-            raise ValueError("У книги нет электронной версии")
+            raise Conflict("У книги нет электронной версии")
         if book.status == BookStatus.ARCHIVED:
             # архивная книга остаётся только тем, кто уже её читает
             if await self.progress_repo.get(user_id, book_id) is None:
-                raise ValueError("Книга в архиве и недоступна для нового чтения")
+                raise Conflict("Книга в архиве и недоступна для нового чтения")
         if book.access_type == AccessType.SUBSCRIPTION:
-            if self.subscription_checker is None:
-                raise RuntimeError("Не передан subscription_checker")
             if not await self.subscription_checker(user_id):
-                raise ValueError("Для этой книги нужна активная подписка")
+                raise NoActiveSubscription("Для этой книги нужна активная подписка")
         return book
 
     async def open_for_reading(self, user_id: int, book_id: int) -> tuple[str, int]:
@@ -48,9 +56,13 @@ class ReadingService(BaseService):
         await self._get_readable_book(user_id, book_id)
         length = await self.book_repo.get_text_length(book_id) or 0
         if not 0 <= position <= length:
-            raise ValueError(f"Позиция должна быть в пределах текста: от 0 до {length}")
+            raise InvalidInput(
+                f"Позиция должна быть в пределах текста: от 0 до {length}"
+            )
 
-        # finished_at ставится, когда позиция достигла конца текста; повторно не сбрасывается
+        # finished_at передаётся только при достижении конца текста. Репозиторий
+        # проставит его, лишь если отметка ещё пуста: прочитанной книга
+        # становится один раз.
         finished_at = datetime.now(timezone.utc) if position == length else None
         async with self._transaction():
             progress = await self.progress_repo.update_position(

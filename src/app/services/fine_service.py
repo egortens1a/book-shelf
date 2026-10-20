@@ -83,5 +83,9 @@ class FineService(BaseService):
         """Неоплаченный штраф закрывает читателю новые брони."""
         return await self.fine_repo.has_unpaid(user_id)
 
+    async def list_for_user(self, user_id: int) -> list[Fine]:
+        """Все штрафы читателя, включая оплаченные."""
+        return await self.fine_repo.list_by_user(user_id)
+
     async def list_unpaid(self, user_id: int) -> list[Fine]:
         return await self.fine_repo.list_unpaid(user_id)
