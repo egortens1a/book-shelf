@@ -34,6 +34,7 @@ class Book(Base):
     )
     authors = relationship("Author", secondary="book_author", back_populates="books")
     genres = relationship("Genre", secondary="book_genre", back_populates="books")
+    ratings = relationship("Rating", lazy='raise')
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     title: Mapped[str] = mapped_column(String(255))

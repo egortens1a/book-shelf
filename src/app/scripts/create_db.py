@@ -17,7 +17,7 @@ async def drop_tables() -> None:
 
 async def main() -> None:
     await create_tables()
-    await drop_tables() # закомментировать для теста, тк потому это будет делать Alembic
+    await drop_tables() # закомментировать для теста, тк потом это будет делать Alembic
     await engine.dispose()
 
 

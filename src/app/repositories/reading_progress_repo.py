@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.user_book_relations import ReadingProgress
 
 
@@ -10,21 +10,21 @@ class ReadingProgressRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_or_create(self, user_id: int, book_id: int) -> ReadingProgress:
-        await self.session.execute(
-            pg_insert(ReadingProgress)
-            .values(user_id=user_id, book_id=book_id, position=0)
-            .on_conflict_do_nothing(
-                index_elements=[ReadingProgress.user_id, ReadingProgress.book_id]
-            )
-        )
-        result = await self.session.execute(
+    async def get(self, user_id: int, book_id: int) -> ReadingProgress | None:
+        return await self.session.scalar(
             select(ReadingProgress).where(
                 ReadingProgress.user_id == user_id,
-                ReadingProgress.book_id == book_id
+                ReadingProgress.book_id == book_id,
             )
         )
-        return result.scalar_one()
+
+    async def get_or_create(self, user_id: int, book_id: int) -> ReadingProgress:
+        progress = await self.get(user_id, book_id)
+        if progress is None:
+            progress = ReadingProgress(user_id=user_id, book_id=book_id, position=0)
+            self.session.add(progress)
+            await self.session.flush()
+        return progress
 
     async def update_position(
         self, user_id: int, book_id: int, position: int, finished_at: datetime | None = None
@@ -36,12 +36,3 @@ class ReadingProgressRepository:
         await self.session.flush()
         await self.session.refresh(progress)
         return progress
-
-    async def get(self, user_id: int, book_id: int) -> ReadingProgress | None:
-        result = await self.session.execute(
-            select(ReadingProgress).where(
-                ReadingProgress.user_id == user_id,
-                ReadingProgress.book_id == book_id
-            )
-        )
-        return result.scalar_one_or_none()
