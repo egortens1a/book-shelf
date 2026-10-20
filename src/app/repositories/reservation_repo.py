@@ -39,7 +39,7 @@ class ReservationRepository:
         """EXISTS по условиям; в запросе нет ничего, кроме самих условий."""
         return bool(await self.session.scalar(select(exists().where(*conditions))))
 
-    async def count_active(self, user_id: int) -> int:
+    async def count_active(self, user_id: int) -> int | None:
         """Сколько броней и выдач у читателя на руках прямо сейчас."""
         return await self.session.scalar(
             select(func.count(Reservation.id)).where(
