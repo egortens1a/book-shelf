@@ -1,3 +1,12 @@
+"""
+Unauthorized -> 401    
+Forbidden -> 403    
+NotFound -> 404
+Conflict     -> 409    
+InvalidInput -> 422
+"""
+
+
 class ServiceError(Exception):
     """Нарушение бизнес-правила.
 
@@ -6,69 +15,105 @@ class ServiceError(Exception):
     """
 
 
-class UserNotFound(ServiceError):
+# Базовые классы
+
+class Unauthorized(ServiceError):
+    """401: нет или невалидный токен, неверный email или пароль."""
+
+
+class Forbidden(ServiceError):
+    """403: не та роль, пользователь заблокирован, нет права на действие."""
+
+
+class NotFound(ServiceError):
+    """404: сущность не найдена (в том числе чужая бронь)."""
+
+
+class Conflict(ServiceError):
+    """409: конфликт состояния, дубликат, нарушение связей."""
+
+
+class InvalidInput(ServiceError):
+    """422: невалидные данные, не пойманные Pydantic."""
+
+
+# 404
+
+class UserNotFound(NotFound):
     pass
 
 
-class SubscriptionAlreadyQueued(ServiceError):
+class BookNotFound(NotFound):
     pass
 
 
-class BookNotFound(ServiceError):
+class CopyNotFound(NotFound):
     pass
 
 
-class BookNotPublished(ServiceError):
+class ReservationNotFound(NotFound):
     pass
 
 
-class CopyNotFound(ServiceError):
+class FineNotFound(NotFound):
     pass
 
 
-class CopyNotAvailable(ServiceError):
+class AuthorNotFound(NotFound):
     pass
 
 
-class DuplicateInventoryNumber(ServiceError):
+class GenreNotFound(NotFound):
     pass
 
 
-class ReservationNotFound(ServiceError):
+# 403 
+
+class NoActiveSubscription(Forbidden):
     pass
 
 
-class InvalidReservationState(ServiceError):
+class HasOverdueLoan(Forbidden):
     pass
 
 
-class PickupExpired(ServiceError):
+class HasUnpaidFine(Forbidden):
     pass
 
 
-class NoCopyAvailable(ServiceError):
+# 409
+
+class SubscriptionAlreadyQueued(Conflict):
     pass
 
 
-class NoActiveSubscription(ServiceError):
+class BookNotPublished(Conflict):
     pass
 
 
-class TooManyReservations(ServiceError):
+class CopyNotAvailable(Conflict):
     pass
 
 
-class AlreadyReserved(ServiceError):
+class DuplicateInventoryNumber(Conflict):
     pass
 
 
-class HasOverdueLoan(ServiceError):
+class InvalidReservationState(Conflict):
     pass
 
 
-class HasUnpaidFine(ServiceError):
+class PickupExpired(Conflict):
     pass
 
 
-class FineNotFound(ServiceError):
+class NoCopyAvailable(Conflict):
+    pass
+
+
+class TooManyReservations(Conflict):
+    pass
+
+
+class AlreadyReserved(Conflict):
     pass

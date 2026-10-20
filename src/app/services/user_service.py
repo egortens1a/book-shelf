@@ -1,8 +1,10 @@
+import asyncio
 import re
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import Forbidden, Unauthorized, InvalidInput, Conflict
 from app.core.security import (
     MAX_PASSWORD_BYTES, MIN_PASSWORD_LENGTH, hash_password, verify_password,
 )
@@ -14,6 +16,10 @@ from app.services.base import BaseService
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 _EMAIL_TAKEN = "Пользователь с таким email уже зарегистрирован"
 
+# Фиктивный хеш: проверяем пароль и когда email не найден, чтобы время ответа
+# не выдавало, зарегистрирован ли email.
+_DUMMY_HASH = hash_password("dummy-password-for-timing")
+
 
 class UserService(BaseService):
     def __init__(self, session: AsyncSession):
@@ -22,11 +28,16 @@ class UserService(BaseService):
         self.genre_repo = GenreRepository(session)
         self.user_genre_repo = UserGenreRepository(session)
 
-
     async def register_reader(
         self, full_name: str, email: str, password: str, genre_ids: list[int] | None = None
     ) -> User:
-        return await self._create_user(RoleTypes.READER, full_name, email, password, genre_ids or [])
+        return await self._create_user(
+            role=RoleTypes.READER,
+            full_name=full_name,
+            email=email,
+            password=password,
+            genre_ids=genre_ids or [],
+        )
 
     async def create_librarian(self, actor_id: int, full_name: str, email: str, password: str) -> User:
         await self._require_role(actor_id, RoleTypes.ADMIN)
@@ -34,10 +45,13 @@ class UserService(BaseService):
 
     async def authenticate(self, email: str, password: str) -> User:
         user = await self.user_repo.get_by_email(normalize_email(email))
-        if user is None or not verify_password(password, user.password_hash):
-            raise ValueError("Неверный email или пароль")
+        password_hash = user.password_hash if user is not None else _DUMMY_HASH
+        # bcrypt блокирует event loop, поэтому выносим в поток
+        password_ok = await asyncio.to_thread(verify_password, password, password_hash)
+        if user is None or not password_ok:
+            raise Unauthorized("Неверный email или пароль")
         if user.status == UserStatus.BLOCKED:
-            raise PermissionError("Пользователь заблокирован")
+            raise Forbidden("Пользователь заблокирован")
         return user
 
     async def _create_user(
@@ -46,34 +60,35 @@ class UserService(BaseService):
         full_name = collapse_spaces(full_name)
         email = normalize_email(email)
         if not full_name:
-            raise ValueError("Имя не может быть пустым")
+            raise InvalidInput("Имя не может быть пустым")
         if not _EMAIL_RE.match(email):
-            raise ValueError("Некорректный email")
+            raise InvalidInput("Некорректный email")
         if len(password) < MIN_PASSWORD_LENGTH:
-            raise ValueError(f"Пароль должен быть не короче {MIN_PASSWORD_LENGTH} символов")
+            raise InvalidInput(f"Пароль должен быть не короче {MIN_PASSWORD_LENGTH} символов")
         if len(password.encode("utf-8")) > MAX_PASSWORD_BYTES:
-            raise ValueError(f"Пароль не должен быть длиннее {MAX_PASSWORD_BYTES} байт")
+            raise InvalidInput(f"Пароль не должен быть длиннее {MAX_PASSWORD_BYTES} байт")
 
         genre_ids = await self._validated_genre_ids(genre_ids)
         role_row = await self.role_repo.get_by_name(role)
         if role_row is None:
-            raise ValueError(f"Роль {role.value} не найдена: заполните справочник ролей")
+            raise InvalidInput(f"Роль {role.value} не найдена: заполните справочник ролей")
+
+        password_hash = await asyncio.to_thread(hash_password, password)
 
         try:
             async with self._transaction():
                 if await self.user_repo.get_by_email(email) is not None:
-                    raise ValueError(_EMAIL_TAKEN)
+                    raise Conflict(_EMAIL_TAKEN)
                 user = await self.user_repo.create(
                     full_name=full_name,
                     email=email,
-                    password_hash=hash_password(password),
+                    password_hash=password_hash,
                     role_id=role_row.id,
                 )
                 await self.user_genre_repo.replace(user.id, genre_ids)
         except IntegrityError as e:
-            raise ValueError(_EMAIL_TAKEN) from e
+            raise Conflict(_EMAIL_TAKEN) from e
         return user
-
 
     async def set_interests(self, user_id: int, genre_ids: list[int]) -> list[int]:
         if await self.user_repo.get_by_id(user_id) is None:
@@ -90,9 +105,8 @@ class UserService(BaseService):
         unique = list(dict.fromkeys(genre_ids))
         for genre_id in unique:
             if await self.genre_repo.get_by_id(genre_id) is None:
-                raise ValueError(f"Жанр {genre_id} не найден")
+                raise InvalidInput(f"Жанр {genre_id} не найден")
         return unique
-
 
     async def block_user(self, actor_id: int, user_id: int) -> User:
         return await self._set_reader_status(actor_id, user_id, UserStatus.BLOCKED)
