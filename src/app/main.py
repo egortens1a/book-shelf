@@ -45,9 +45,12 @@ def create_app() -> FastAPI:
 
     return app
 
+app = create_app()
+
 if __name__ == "__main__":
-    app = create_app()
-    uvicorn.run(app,
-                host="127.0.0.1",
-                port=8000,
-                reload=True)         # автоперезагрузка при изменениях
+    uvicorn.run(
+        "app.main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True
+    )
