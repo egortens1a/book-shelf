@@ -273,6 +273,13 @@ class ReservationService(BaseService):
         fine = await self._fines.charge_lost(reservation)
         return reservation, fine
 
+    async def get_card(self, reservation_id: int) -> Reservation:
+        """Бронь с экземпляром и книгой, готовая к отдаче клиенту."""
+        reservation = await self.reservation_repo.get_card(reservation_id)
+        if reservation is None:
+            raise ReservationNotFound(f"Бронь {reservation_id} не найдена")
+        return reservation
+
     async def list_for_user(self, user_id: int) -> list[Reservation]:
         """История броней читателя, от новых к старым."""
         return await self.reservation_repo.list_by_user(user_id)

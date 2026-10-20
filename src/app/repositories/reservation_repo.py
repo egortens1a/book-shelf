@@ -36,6 +36,20 @@ class ReservationRepository:
     async def get_by_id(self, reservation_id: int) -> Reservation | None:
         return await self.session.get(Reservation, reservation_id)
 
+    async def get_card(self, reservation_id: int) -> Reservation | None:
+        """Бронь вместе с экземпляром и книгой - для ответа клиенту.
+
+        populate_existing нужен, потому что после изменения объект уже лежит
+        в кеше сессии: без него session.get вернёт его как есть и опции
+        загрузки не применятся, а связи останутся незагруженными.
+        """
+        return await self.session.get(
+            Reservation,
+            reservation_id,
+            options=_CARD_OPTIONS,
+            populate_existing=True,
+        )
+
     async def get_for_update(self, reservation_id: int) -> Reservation | None:
         """Бронь с блокировкой строки до конца транзакции."""
         return await self.session.get(Reservation, reservation_id, with_for_update=True)
