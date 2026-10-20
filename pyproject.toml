@@ -6,27 +6,16 @@ build-backend = "setuptools.build_meta"
 name = "bookshelf"
 version = "0.1.0"
 requires-python = ">=3.11"
-<<<<<<< HEAD
-<<<<<<< Updated upstream
 
-=======
 dependencies = [
     "fastapi >= 0.144.0",
     "uvicorn >= 0.54.0",
-=======
-dependencies = [
->>>>>>> dev
     "sqlalchemy[asyncio]>=2.0",
     "asyncpg>=0.29",
     "pydantic-settings>=2.0",
     "alembic>=1.13",
     "bcrypt>=4.0",
 ]
-<<<<<<< HEAD
->>>>>>> Stashed changes
-=======
->>>>>>> dev
-
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
