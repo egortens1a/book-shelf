@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -69,10 +70,12 @@ class ReservationService(BaseService):
         await self.session.flush()
 
     async def active_count(self, user_id: int) -> int:
-        """Сколько броней и выдач у читателя на руках прямо сейчас."""
-        count = await self.reservation_repo.count_active(user_id)
-        if count is None: raise UserNotFound
-        return count
+        """Сколько броней и выдач у читателя на руках прямо сейчас.
+
+        Существование читателя здесь не проверяется: для чужого id вернётся
+        ноль. В reserve он уже заблокирован и проверен раньше.
+        """
+        return await self.reservation_repo.count_active(user_id)
 
     async def has_overdue(self, user_id: int) -> bool:
         """Есть ли невозвращённая книга с истёкшим сроком чтения."""
@@ -161,17 +164,31 @@ class ReservationService(BaseService):
                     f"Свободных экземпляров книги «{book.title}» сейчас нет"
                 )
             copy.status = CopyStatus.RESERVED
-            return await self.reservation_repo.create(
-                user_id=user_id,
-                copy_id=copy.id,
-                pickup_deadline=datetime.now(timezone.utc)
-                + timedelta(hours=self._settings.reservation_hours),
-            )
+            try:
+                return await self.reservation_repo.create(
+                    user_id=user_id,
+                    copy_id=copy.id,
+                    pickup_deadline=datetime.now(timezone.utc)
+                    + timedelta(hours=self._settings.reservation_hours),
+                )
+            except IntegrityError as exc:
+                # Последний рубеж: uq_reservations_copy_active. Сработать почти
+                # не может - экземпляр уже заблокирован через SKIP LOCKED, - но
+                # без перевода в доменную ошибку клиент получил бы 500.
+                raise NoCopyAvailable(
+                    f"Экземпляр книги «{book.title}» только что заняли"
+                ) from exc
 
-    async def cancel(self, reservation_id: int) -> Reservation:
-        """Читатель отказывается от брони до получения книги."""
+    async def cancel(self, reservation_id: int, user_id: int) -> Reservation:
+        """Читатель отказывается от брони до получения книги.
+
+        Чужая бронь отдаётся как ненайденная, а не как запрещённая: иначе
+        перебором по id можно выяснить, какие брони существуют.
+        """
         async with self._transaction():
             reservation = await self._lock(reservation_id)
+            if reservation.user_id != user_id:
+                raise ReservationNotFound(f"Бронь {reservation_id} не найдена")
             if reservation.status is not ReservationStatus.CREATED:
                 raise InvalidReservationState(
                     f"Отменить можно только бронь в статусе CREATED, "
@@ -256,5 +273,30 @@ class ReservationService(BaseService):
         fine = await self._fines.charge_lost(reservation)
         return reservation, fine
 
+    async def get_card(self, reservation_id: int) -> Reservation:
+        """Бронь с экземпляром и книгой, готовая к отдаче клиенту."""
+        reservation = await self.reservation_repo.get_card(reservation_id)
+        if reservation is None:
+            raise ReservationNotFound(f"Бронь {reservation_id} не найдена")
+        return reservation
+
     async def list_for_user(self, user_id: int) -> list[Reservation]:
+        """История броней читателя, от новых к старым."""
         return await self.reservation_repo.list_by_user(user_id)
+
+    async def list_filtered(
+        self,
+        status: ReservationStatus | None = None,
+        user_id: int | None = None,
+        inventory_number: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[Reservation]:
+        """Список броней для библиотекаря. Размер страницы зажат в разумные рамки."""
+        return await self.reservation_repo.list_filtered(
+            status=status,
+            user_id=user_id,
+            inventory_number=inventory_number,
+            limit=max(1, min(limit, 200)),
+            offset=max(0, offset),
+        )
