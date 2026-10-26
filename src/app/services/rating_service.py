@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import InvalidInput, FineNotFound
+from app.core.errors import InvalidInput, FineNotFound, BookNotFound, Conflict, NotFound
 from app.models import BookStatus
 from app.models.user_book_relations import Rating
 from app.repositories import BookRepository, RatingRepository, ReadingProgressRepository
@@ -42,9 +42,9 @@ class RatingService(BaseService):
             raise InvalidInput(f"Оценка должна быть целым числом от {MIN_SCORE} до {MAX_SCORE}")
         book = await self.book_repo.get_by_id(book_id)
         if book is None or book.status == BookStatus.DRAFT:
-            raise InvalidInput("Книга не найдена")
+            raise BookNotFound("Книга не найдена")
         if not await self._has_finished(user_id, book_id):
-            raise InvalidInput(
+            raise Conflict(
                 "Оценить книгу можно после дочитывания или возврата бумажного экземпляра"
             )
         comment = (comment or "").strip() or None
@@ -55,7 +55,7 @@ class RatingService(BaseService):
     async def delete_rating(self, user_id: int, book_id: int) -> None:
         # Повторное удаление и удаление чужой или несуществующей оценки: 404.
         if await self.rating_repo.get_by_user_and_book(user_id, book_id) is None:
-            raise FineNotFound("Оценка не найдена")
+            raise NotFound("Оценка не найдена")
         async with self._transaction():
             await self.rating_repo.delete(user_id, book_id)
 

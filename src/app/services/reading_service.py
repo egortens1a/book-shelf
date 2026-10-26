@@ -14,8 +14,6 @@ from app.repositories import BookRepository, ReadingProgressRepository
 from app.services.base import BaseService
 from app.services.protocols import SubscriptionChecker
 
-from app.core.errors import InvalidInput, BookNotFound, Forbidden, NoActiveSubscription
-
 class ReadingService(BaseService):
     def __init__(
         self, session: AsyncSession,
