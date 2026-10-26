@@ -5,7 +5,19 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
-from app.models import Author, Book, BookStatus, Genre, Rating, Role, User
+from app.models import (
+    Author,
+    Book,
+    BookStatus,
+    Fine,
+    FineStatus,
+    Genre,
+    Rating,
+    Reservation,
+    Role,
+    Subscription,
+    User,
+)
 
 
 class StatsRepository:
@@ -48,6 +60,24 @@ class StatsRepository:
             await self.session.execute(select(func.count(Rating.id), func.avg(Rating.score)))
         ).one()
         return count, avg
+
+    # --- выдачи, подписки и штрафы: README требует их в статистике ---
+
+    async def reservations_by_status(self) -> dict[str, int]:
+        return await self._count_by(Reservation.status)
+
+    async def subscriptions_by_status(self) -> dict[str, int]:
+        return await self._count_by(Subscription.status)
+
+    async def fines_by_status(self) -> dict[str, int]:
+        return await self._count_by(Fine.status)
+
+    async def unpaid_fines_total(self) -> Decimal:
+        """Сумма неоплаченных штрафов. Пустая выборка даёт NULL, не ноль."""
+        total = await self.session.scalar(
+            select(func.sum(Fine.amount)).where(Fine.status == FineStatus.UNPAID)
+        )
+        return total or Decimal("0.00")
 
     async def get_top_by_genre(
         self, genre_id: int, limit: int = 10

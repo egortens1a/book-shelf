@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import BookNotFound
 from app.models import Book, BookStatus
 from app.repositories import BookRepository, WishlistRepository
 from app.services.base import BaseService
