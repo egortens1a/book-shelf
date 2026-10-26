@@ -14,7 +14,6 @@ from app.repositories import BookRepository, ReadingProgressRepository
 from app.services.base import BaseService
 from app.services.protocols import SubscriptionChecker
 
-
 class ReadingService(BaseService):
     def __init__(
         self, session: AsyncSession,
@@ -56,9 +55,7 @@ class ReadingService(BaseService):
         await self._get_readable_book(user_id, book_id)
         length = await self.book_repo.get_text_length(book_id) or 0
         if not 0 <= position <= length:
-            raise InvalidInput(
-                f"Позиция должна быть в пределах текста: от 0 до {length}"
-            )
+            raise InvalidInput(f"Позиция должна быть в пределах текста: от 0 до {length}")
 
         # finished_at передаётся только при достижении конца текста. Репозиторий
         # проставит его, лишь если отметка ещё пуста: прочитанной книга

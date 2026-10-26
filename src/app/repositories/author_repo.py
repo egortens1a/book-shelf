@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.text import normalize_name
 from app.models import Author
 
+from app.core.errors import NotFound
+
 
 class AuthorRepository:
     def __init__(self, session: AsyncSession):
@@ -30,7 +32,7 @@ class AuthorRepository:
     async def rename(self, author_id: int, new_name: str) -> Author:
         author = await self.get_by_id(author_id)
         if author is None:
-            raise ValueError("Автор не найден")
+            raise NotFound("Автор не найден")
         author.full_name = normalize_name(new_name)
         await self.session.flush()
         return author
@@ -38,6 +40,6 @@ class AuthorRepository:
     async def delete(self, author_id: int) -> None:
         author = await self.get_by_id(author_id)
         if author is None:
-            raise ValueError("Автор не найден")
+            raise NotFound("Автор не найден")
         await self.session.delete(author)
         await self.session.flush()

@@ -4,7 +4,7 @@ import bcrypt
 import jwt
 
 from app.core.config import get_settings
-from app.core.errors import Unauthorized
+from app.core.errors import Unauthorized, UserNotFound
 
 MIN_PASSWORD_LENGTH = 8
 MAX_PASSWORD_BYTES = 72

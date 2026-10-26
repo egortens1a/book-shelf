@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Role, RoleTypes, User, UserStatus
 
+from app.core.errors import UserNotFound
 
 class UserRepository:
     def __init__(self, session: AsyncSession):
@@ -34,7 +35,7 @@ class UserRepository:
     async def set_status(self, user_id: int, status: UserStatus | str) -> User:
         user = await self.get_by_id(user_id)
         if user is None:
-            raise ValueError("Пользователь не найден")
+            raise UserNotFound("Пользователь не найден")
         user.status = UserStatus(status)
         await self.session.flush()
         return user

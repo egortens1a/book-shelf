@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import RoleTypes, UserStatus
 from app.repositories import UserRepository
 
+from app.core.errors import UserNotFound
 
 class BaseService:
     def __init__(self, session: AsyncSession):
@@ -21,7 +22,7 @@ class BaseService:
         """Пользователь существует, не заблокирован и имеет одну из ролей"""
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
-            raise ValueError("Пользователь не найден")
+            raise UserNotFound("Пользователь не найден")
         if user.status != UserStatus.ACTIVE:
             raise PermissionError("Пользователь заблокирован")
         if await self.user_repo.get_role_name(user_id) not in roles:

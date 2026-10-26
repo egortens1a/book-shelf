@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.text import normalize_name
 from app.models import Genre
 
+from app.core.errors import GenreNotFound
+
 
 class GenreRepository:
     def __init__(self, session: AsyncSession):
@@ -30,7 +32,7 @@ class GenreRepository:
     async def rename(self, genre_id: int, new_name: str) -> Genre:
         genre = await self.get_by_id(genre_id)
         if genre is None:
-            raise ValueError("Жанр не найден")
+            raise GenreNotFound("Жанр не найден")
         genre.name = normalize_name(new_name)
         await self.session.flush()
         return genre
@@ -38,6 +40,6 @@ class GenreRepository:
     async def delete(self, genre_id: int) -> None:
         genre = await self.get_by_id(genre_id)
         if genre is None:
-            raise ValueError("Жанр не найден")
+            raise GenreNotFound("Жанр не найден")
         await self.session.delete(genre)
         await self.session.flush()

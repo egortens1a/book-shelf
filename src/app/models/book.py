@@ -38,6 +38,7 @@ class Book(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     title: Mapped[str] = mapped_column(String(255))
+    
     description: Mapped[str] = mapped_column(Text, nullable=False)
     publication_year: Mapped[int | None] = mapped_column(Integer)
     access_type: Mapped[AccessType] = mapped_column(

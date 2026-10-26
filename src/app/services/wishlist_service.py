@@ -16,8 +16,6 @@ class WishlistService(BaseService):
         """True - книга добавлена, False - она уже была в списке"""
         book = await self.book_repo.get_by_id(book_id)
         if book is None or book.status != BookStatus.PUBLISHED:
-            # По ТЗ именно 404: неопубликованная книга для читателя
-            # не отличается от несуществующей.
             raise BookNotFound("Книга недоступна")
         async with self._transaction():
             item = await self.wishlist_repo.add(user_id, book_id)

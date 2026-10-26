@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import engine, session_factory
 from app.models import User  # импорт app.models регистрирует в metadata все таблицы
-from app.scripts import seed_catalog, seed_loans
+from app.scripts import seed_catalog, seed_loans, seed_api
 
 
 async def wipe_database(session: AsyncSession) -> None:
@@ -19,6 +19,9 @@ async def seed_all(session: AsyncSession) -> None:
     await seed_catalog.ensure_roles(session)
     await seed_catalog.seed(session)
     await seed_loans.seed(session)
+    # lab2
+    await seed_api.ensure_seed(session)
+    await session.commit()
 
 
 async def main() -> None:

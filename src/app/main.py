@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from app.core.error_handlers import register_exception_handlers
 from app.core.db import engine
 
-from app.api.routers import auth, me
+from app.api.routers import auth, me, admin, catalog, directory, ratings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -32,12 +32,15 @@ def create_app() -> FastAPI:
 
     app.include_router(auth.router) # /register, /login
     app.include_router(me.router) # /me, /me/interests, /me/recommendations (в будущем)
-    # app.include_router(admin.router)       # /admin/...
+    app.include_router(admin.router)       # /admin/...
 
-    # app.include_router(catalog.router)     # /books, /genres, /authors
-    # app.include_router(librarian.router)   # /librarian/books/...
+    app.include_router(catalog.reader_router)     # /books, /genres, /authors
+    app.include_router(catalog.librarian_router)    # /librarian/books/...
+    
+    app.include_router(directory.router)
+    app.include_router(directory.router_admin)
 
-    # app.include_router(ratings.router)     # /books/{id}/rating(s)
+    app.include_router(ratings.router)     # /books/{id}/rating(s)
 
     @app.get("/health", tags=["service"])
     async def health() -> dict[str, str]:

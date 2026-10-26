@@ -70,12 +70,10 @@ class ReservationService(BaseService):
         await self.session.flush()
 
     async def active_count(self, user_id: int) -> int:
-        """Сколько броней и выдач у читателя на руках прямо сейчас.
-
-        Существование читателя здесь не проверяется: для чужого id вернётся
-        ноль. В reserve он уже заблокирован и проверен раньше.
-        """
-        return await self.reservation_repo.count_active(user_id)
+        """Сколько броней и выдач у читателя на руках прямо сейчас."""
+        count = await self.reservation_repo.count_active(user_id)
+        if count is None: raise UserNotFound
+        return count
 
     async def has_overdue(self, user_id: int) -> bool:
         """Есть ли невозвращённая книга с истёкшим сроком чтения."""
