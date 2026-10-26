@@ -22,7 +22,7 @@ async def register(
         email=data.email,
         password=data.password,
     )
-    return UserRead.model_validate(user)
+    return user
 
 
 @router.post("/login", response_model=TokenRead)

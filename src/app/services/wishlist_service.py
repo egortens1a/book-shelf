@@ -4,6 +4,8 @@ from app.models import Book, BookStatus
 from app.repositories import BookRepository, WishlistRepository
 from app.services.base import BaseService
 
+from app.core.errors import Forbidden
+
 
 class WishlistService(BaseService):
     def __init__(self, session: AsyncSession):
@@ -15,7 +17,7 @@ class WishlistService(BaseService):
         """True - книга добавлена, False - она уже была в списке"""
         book = await self.book_repo.get_by_id(book_id)
         if book is None or book.status != BookStatus.PUBLISHED:
-            raise ValueError("Книга недоступна")
+            raise Forbidden("Книга недоступна")
         async with self._transaction():
             item = await self.wishlist_repo.add(user_id, book_id)
         return item is not None

@@ -4,7 +4,7 @@ import re
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import Forbidden, Unauthorized, InvalidInput, Conflict
+from app.core.errors import Forbidden, Unauthorized, InvalidInput, Conflict, UserNotFound
 from app.core.security import (
     MAX_PASSWORD_BYTES, MIN_PASSWORD_LENGTH, hash_password, verify_password,
 )
@@ -39,8 +39,7 @@ class UserService(BaseService):
             genre_ids=genre_ids or [],
         )
 
-    async def create_librarian(self, actor_id: int, full_name: str, email: str, password: str) -> User:
-        await self._require_role(actor_id, RoleTypes.ADMIN)
+    async def create_librarian(self, full_name: str, email: str, password: str) -> User:
         return await self._create_user(RoleTypes.LIBRARIAN, full_name, email, password, [])
 
     async def authenticate(self, email: str, password: str) -> User:
@@ -92,7 +91,7 @@ class UserService(BaseService):
 
     async def set_interests(self, user_id: int, genre_ids: list[int]) -> list[int]:
         if await self.user_repo.get_by_id(user_id) is None:
-            raise ValueError("Пользователь не найден")
+            raise UserNotFound("Пользователь не найден")
         genre_ids = await self._validated_genre_ids(genre_ids)
         async with self._transaction():
             await self.user_genre_repo.replace(user_id, genre_ids)
@@ -108,22 +107,23 @@ class UserService(BaseService):
                 raise InvalidInput(f"Жанр {genre_id} не найден")
         return unique
 
-    async def block_user(self, actor_id: int, user_id: int) -> User:
-        return await self._set_reader_status(actor_id, user_id, UserStatus.BLOCKED)
+    async def block_user(self, user_id: int) -> User:
+        return await self._set_reader_status(user_id, UserStatus.BLOCKED)
 
-    async def unblock_user(self, actor_id: int, user_id: int) -> User:
-        return await self._set_reader_status(actor_id, user_id, UserStatus.ACTIVE)
+    async def unblock_user(self, user_id: int) -> User:
+        return await self._set_reader_status(user_id, UserStatus.ACTIVE)
 
-    async def list_users(self, actor_id: int, limit: int = 50, offset: int = 0) -> list[User]:
-        await self._require_role(actor_id, RoleTypes.ADMIN)
+    async def list_users(self, limit: int = 50, offset: int = 0) -> list[User]:
         return await self.user_repo.list_users(max(1, min(limit, 200)), max(0, offset))
 
-    async def _set_reader_status(self, actor_id: int, user_id: int, status: UserStatus) -> User:
-        await self._require_role(actor_id, RoleTypes.ADMIN)
+    async def _set_reader_status(self, user_id: int, status: UserStatus) -> User:
         target_role = await self.user_repo.get_role_name(user_id)
         if target_role is None:
-            raise ValueError("Пользователь не найден")
+            raise UserNotFound("Пользователь не найден")
         if target_role != RoleTypes.READER:
-            raise ValueError("Блокировать и разблокировать можно только читателей")
+            raise InvalidInput("Блокировать и разблокировать можно только читателей")
         async with self._transaction():
             return await self.user_repo.set_status(user_id, status)
+        
+    async def get_role_name(self, role_id: int) -> RoleTypes | None:
+        return await self.user_repo.get_role_name(role_id)

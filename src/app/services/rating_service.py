@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import InvalidInput, FineNotFound
 from app.models import BookStatus
 from app.models.user_book_relations import Rating
 from app.repositories import BookRepository, RatingRepository, ReadingProgressRepository
@@ -38,12 +39,12 @@ class RatingService(BaseService):
 
     async def rate(self, user_id: int, book_id: int, score: int, comment: str | None = None) -> Rating:
         if isinstance(score, bool) or not isinstance(score, int) or not MIN_SCORE <= score <= MAX_SCORE:
-            raise ValueError(f"Оценка должна быть целым числом от {MIN_SCORE} до {MAX_SCORE}")
+            raise InvalidInput(f"Оценка должна быть целым числом от {MIN_SCORE} до {MAX_SCORE}")
         book = await self.book_repo.get_by_id(book_id)
         if book is None or book.status == BookStatus.DRAFT:
-            raise ValueError("Книга не найдена")
+            raise InvalidInput("Книга не найдена")
         if not await self._has_finished(user_id, book_id):
-            raise ValueError(
+            raise InvalidInput(
                 "Оценить книгу можно после дочитывания или возврата бумажного экземпляра"
             )
         comment = (comment or "").strip() or None
@@ -52,6 +53,9 @@ class RatingService(BaseService):
         return rating
 
     async def delete_rating(self, user_id: int, book_id: int) -> None:
+        # Повторное удаление и удаление чужой или несуществующей оценки: 404.
+        if await self.rating_repo.get_by_user_and_book(user_id, book_id) is None:
+            raise FineNotFound("Оценка не найдена")
         async with self._transaction():
             await self.rating_repo.delete(user_id, book_id)
 

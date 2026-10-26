@@ -11,7 +11,7 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import Forbidden, Unauthorized
+from app.core.errors import Forbidden, Unauthorized, UserNotFound
 from app.core.security import decode_token
 from app.core.db import get_async_session
 from app.models import RoleTypes, User, UserStatus
@@ -49,7 +49,7 @@ async def get_current_user(
     payload = decode_token(token)  # бросает Unauthorized: подпись, срок, формат
     try:
         user_id = int(payload["sub"])
-    except (KeyError, TypeError, ValueError):
+    except (KeyError, TypeError, ValueError, UserNotFound):
         raise Unauthorized("Invalid token") from None
 
     user = await UserRepository(session).get_by_id(user_id)
@@ -70,7 +70,7 @@ def require_role(*roles: RoleTypes):
     """
 
     async def dependency(user: CurrentUser, session: SessionDep) -> User:
-        role = await UserRepository(session).get_role_name(user.id)
+        role = await UserService(session).get_role_name(user.id)
         if role not in roles:
             raise Forbidden("Insufficient permissions")
         return user
