@@ -152,10 +152,10 @@ async def run_block_a(sf=session_factory) -> None:
         await sv.session.commit()
 
         print("\n5. Статистика")
-        stats = await sv.stats.get_catalog_stats(admin)
-        
+        stats = await sv.stats.get_catalog_stats()
+
         ok(f"книги по статусам: {stats['books_by_status']}")
-        await refuse("читатель просит статистику", sv.stats.get_catalog_stats(r1), PermissionError)
+        # Отказ читателю проверяется на уровне API: demo_api, «читатель в админке».
         await sv.session.commit()
         
         print("\n 6. Топ 3 книга")
