@@ -22,7 +22,9 @@ from app.api.routers import (
     ratings,
     reading,
     reservations,
+    stats,
     subscriptions,
+    wishlist,
 )
 
 @asynccontextmanager
@@ -59,11 +61,15 @@ def create_app() -> FastAPI:
     app.include_router(reservations.reader_router)     # /me/reservations
     app.include_router(fines.reader_router)            # /me/fines
     app.include_router(reading.router)                 # /books/{id}/read, /progress
+    app.include_router(wishlist.router)                # /me/wishlist
 
     # Блок Б. Библиотекарская часть: роль проверяется на уровне роутеров.
     app.include_router(copies.router)                  # /books/{id}/copies, /copies/{id}/write-off
     app.include_router(reservations.librarian_router)  # /librarian/reservations/...
     app.include_router(fines.librarian_router)         # /librarian/fines/{id}/pay
+
+    # Блок Б. Сводки для администратора.
+    app.include_router(stats.router)                   # /admin/stats, /admin/stats/top
 
     @app.get("/health", tags=["service"])
     async def health() -> dict[str, str]:
