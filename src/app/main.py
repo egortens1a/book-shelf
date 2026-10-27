@@ -11,7 +11,19 @@ from fastapi import FastAPI
 from app.core.error_handlers import register_exception_handlers
 from app.core.db import engine
 
-from app.api.routers import auth, me, admin, catalog, directory, ratings
+from app.api.routers import (
+    admin,
+    auth,
+    catalog,
+    copies,
+    directory,
+    fines,
+    me,
+    ratings,
+    reading,
+    reservations,
+    subscriptions,
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -41,6 +53,17 @@ def create_app() -> FastAPI:
     app.include_router(directory.router_admin)
 
     app.include_router(ratings.router)     # /books/{id}/rating(s)
+
+    # Блок Б. Читательская часть: подписка, брони, штрафы, чтение.
+    app.include_router(subscriptions.router)           # /me/subscription(s)
+    app.include_router(reservations.reader_router)     # /me/reservations
+    app.include_router(fines.reader_router)            # /me/fines
+    app.include_router(reading.router)                 # /books/{id}/read, /progress
+
+    # Блок Б. Библиотекарская часть: роль проверяется на уровне роутеров.
+    app.include_router(copies.router)                  # /books/{id}/copies, /copies/{id}/write-off
+    app.include_router(reservations.librarian_router)  # /librarian/reservations/...
+    app.include_router(fines.librarian_router)         # /librarian/fines/{id}/pay
 
     @app.get("/health", tags=["service"])
     async def health() -> dict[str, str]:
