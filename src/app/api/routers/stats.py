@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.deps import CurrentUser, get_stats_service, require_role
+from app.api.deps import get_stats_service, require_role
 from app.models import RoleTypes
 from app.schemas.stats import CatalogStatsRead, TopBookRead
 from app.services.stats_service import StatsService
@@ -20,13 +20,9 @@ router = APIRouter(
 
 
 @router.get("/stats", response_model=CatalogStatsRead)
-async def catalog_stats(user: CurrentUser, stats: Stats):
-    """Сводка по всей библиотеке.
-
-    Идентификатор администратора передаётся в сервис: тот проверяет роль
-    повторно, чтобы правило работало и при вызове не из API.
-    """
-    return await stats.get_catalog_stats(user.id)
+async def catalog_stats(stats: Stats):
+    """Сводка по всей библиотеке."""
+    return await stats.get_catalog_stats()
 
 
 @router.get("/stats/top", response_model=list[TopBookRead])
