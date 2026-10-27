@@ -2,11 +2,8 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import RoleTypes
 from app.repositories import StatsRepository
 from app.services.base import BaseService
-
-from app.models import Book
 
 
 class StatsService(BaseService):
@@ -14,8 +11,12 @@ class StatsService(BaseService):
         super().__init__(session)
         self.stats_repo = StatsRepository(session)
 
-    async def get_catalog_stats(self, actor_id: int) -> dict[str, Any]:
-        await self._require_role(actor_id, RoleTypes.ADMIN)
+    async def get_catalog_stats(self) -> dict[str, Any]:
+        """Сводка по библиотеке.
+
+        Роль здесь не проверяется: доступом заведует слой API, как и у
+        остальных сервисов проекта. Эндпоинт закрыт require_role(ADMIN).
+        """
         ratings_count, ratings_avg = await self.stats_repo.ratings_overall()
         return {
             "books_by_status": await self.stats_repo.books_by_status(),
