@@ -1,0 +1,5 @@
+$kind: http-request
+description: "PUT, а не POST: повторное добавление не ошибка и список не меняет. Неопубликованная книга даёт 404."
+url: "{{baseUrl}}/me/wishlist/{{bookId}}"
+method: PUT
+order: 2000

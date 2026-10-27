@@ -1,0 +1,5 @@
+$kind: http-request
+description: Фиксированный штраф за утерю. Экземпляр переходит в LOST и из оборота выбывает.
+url: "{{baseUrl}}/librarian/reservations/{{reservationId}}/lost"
+method: POST
+order: 4000

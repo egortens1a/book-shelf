@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Тоже идемпотентно: удаление отсутствующей книги не ошибка."
+url: "{{baseUrl}}/me/wishlist/{{bookId}}"
+method: DELETE
+order: 3000

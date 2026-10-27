@@ -2,16 +2,16 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:latest
+    image: postgres:18
     container_name: bookshelf-db
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: bookshelf
+      POSTGRES_PASSWORD: bookshelf
+      POSTGRES_DB: bookshelf
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - bookshelf_pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
@@ -44,9 +44,11 @@ services:
       context: ./docker/nginx
     container_name: bookshelf-nginx
     ports:
-      - "80:80"
+      - "80:80"     # перенаправляет на HTTPS
+      - "443:443"   # HTTPS
     depends_on:
       - api
 
 volumes:
-  pgdata:
+  bookshelf_pgdata:
+    external: true

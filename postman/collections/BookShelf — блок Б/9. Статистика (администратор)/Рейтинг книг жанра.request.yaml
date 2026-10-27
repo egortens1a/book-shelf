@@ -1,0 +1,8 @@
+$kind: http-request
+description: Только опубликованные книги с оценками. limit ограничен 1..50, иначе 422.
+url: "{{baseUrl}}/admin/stats/top?genre_id={{genreId}}&limit=10"
+method: GET
+queryParams:
+  genre_id: "{{genreId}}"
+  limit: "10"
+order: 2000

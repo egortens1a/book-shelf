@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{baseUrl}}/librarian/reservations/{{reservationId}}/issue"
+method: POST
+order: 3000
