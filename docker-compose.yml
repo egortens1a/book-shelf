@@ -43,6 +43,8 @@ services:
     build:
       context: ./docker/nginx
     container_name: bookshelf-nginx
+    volumes:
+    - ./docker/nginx/static:/var/www/static:ro
     ports:
       - "80:80"     # перенаправляет на HTTPS
       - "443:443"   # HTTPS
@@ -51,4 +53,3 @@ services:
 
 volumes:
   bookshelf_pgdata:
-    external: true
