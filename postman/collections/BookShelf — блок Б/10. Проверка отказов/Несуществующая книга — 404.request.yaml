@@ -1,4 +1,0 @@
-$kind: http-request
-url: "{{baseUrl}}/me/wishlist/999999"
-method: PUT
-order: 4000

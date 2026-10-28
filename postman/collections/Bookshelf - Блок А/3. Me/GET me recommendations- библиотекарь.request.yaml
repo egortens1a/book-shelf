@@ -1,0 +1,13 @@
+$kind: http-request
+name: 'GET me recommendations: библиотекарь'
+url: '{{baseUrl}}/me/recommendations'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{librarianToken}}'
+scripts:
+- type: afterResponse
+  code: pm.test("Статус 403", () => pm.response.to.have.status(403));
+  language: text/javascript
+order: 9000

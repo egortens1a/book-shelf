@@ -1,5 +1,0 @@
-$kind: http-request
-description: "Тела нет: цена и срок берутся из настроек. Повторный вызов при действующей подписке ставит продление в очередь (PENDING), третий даёт 409."
-url: "{{baseUrl}}/me/subscription"
-method: POST
-order: 1000

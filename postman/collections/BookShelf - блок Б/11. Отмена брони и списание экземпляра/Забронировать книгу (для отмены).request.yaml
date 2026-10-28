@@ -1,0 +1,23 @@
+$kind: http-request
+description: Нужна действующая подписка, отсутствие просрочек и неоплаченных штрафов, лимит одновременных броней. Свободный экземпляр выбирается под блокировкой.
+url: '{{baseUrl}}/me/reservations'
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "book_id": {{loanBookId}}
+    }
+auth:
+  type: bearer
+  credentials:
+    token: '{{subscriberToken}}'
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test('201', () => pm.response.to.have.status(201));
+    pm.environment.set('reservationId', pm.response.json().id);
+  language: text/javascript
+order: 1000

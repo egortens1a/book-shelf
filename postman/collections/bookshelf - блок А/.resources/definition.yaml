@@ -1,1 +1,5 @@
 $kind: collection
+description: |-
+  Тесты: auth, me, admin, справочники, каталог, оценки. Запускайте через Collection Runner сверху вниз. Перед запуском: python -m app.scripts.seed_api
+
+  Окружение: выберите «Bookshelf local». Все переменные (учётные записи, токены, id созданных объектов) хранятся только в нём, в самих коллекциях переменных нет. Данные: python -m app.scripts.seed.

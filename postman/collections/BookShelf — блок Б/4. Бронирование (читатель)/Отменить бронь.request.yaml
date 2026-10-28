@@ -1,5 +1,0 @@
-$kind: http-request
-description: Отменить можно только бронь в статусе CREATED. Чужая бронь даёт 404, а не 403.
-url: "{{baseUrl}}/me/reservations/{{reservationId}}/cancel"
-method: POST
-order: 3000

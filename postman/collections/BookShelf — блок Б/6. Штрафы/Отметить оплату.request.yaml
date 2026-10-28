@@ -1,5 +1,0 @@
-$kind: http-request
-description: "Идемпотентно: повторная оплата возвращает тот же штраф, а не ошибку."
-url: "{{baseUrl}}/librarian/fines/{{fineId}}/pay"
-method: POST
-order: 2000

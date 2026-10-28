@@ -1,4 +1,0 @@
-$kind: http-request
-url: "{{baseUrl}}/me/reservations"
-method: GET
-order: 1000

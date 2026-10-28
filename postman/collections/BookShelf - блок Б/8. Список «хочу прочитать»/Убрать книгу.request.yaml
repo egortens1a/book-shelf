@@ -1,0 +1,9 @@
+$kind: http-request
+description: 'Тоже идемпотентно: удаление отсутствующей книги не ошибка.'
+url: '{{baseUrl}}/me/wishlist/{{loanBookId}}'
+method: DELETE
+auth:
+  type: bearer
+  credentials:
+    token: '{{subscriberToken}}'
+order: 3000

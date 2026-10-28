@@ -1,4 +1,0 @@
-$kind: http-request
-url: "{{baseUrl}}/books/{{bookId}}/progress"
-method: GET
-order: 2000

@@ -1,0 +1,15 @@
+$kind: http-request
+url: '{{baseUrl}}/me/interests'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{readerToken}}'
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test("Статус 200", () => pm.response.to.have.status(200));
+    const j = pm.response.json();
+    pm.test("genre_ids массив", () => pm.expect(j.genre_ids).to.be.an("array"));
+  language: text/javascript
+order: 4000

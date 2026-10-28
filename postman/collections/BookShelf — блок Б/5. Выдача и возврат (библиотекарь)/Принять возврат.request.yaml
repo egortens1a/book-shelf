@@ -1,5 +1,0 @@
-$kind: http-request
-description: При просрочке в ответе появляется начисленный штраф, иначе поле fine равно null.
-url: "{{baseUrl}}/librarian/reservations/{{reservationId}}/return"
-method: POST
-order: 3000

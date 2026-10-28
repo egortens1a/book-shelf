@@ -1,0 +1,9 @@
+$kind: http-request
+description: В карточке есть название книги, инвентарный номер и расчётная пеня, если срок уже вышел.
+url: '{{baseUrl}}/me/reservations'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{subscriberToken}}'
+order: 2000

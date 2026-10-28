@@ -1,0 +1,29 @@
+$kind: http-request
+url: '{{baseUrl}}/admin/librarians'
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "full_name": "Новый Библиотекарь",
+      "email": "x",
+      "password": "{{newPassword}}"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: '{{adminToken}}'
+scripts:
+- type: beforeRequest
+  code: |-
+    pm.environment.set("newLibEmail", `lib_${Date.now()}@test.local`);
+    pm.request.body.update(JSON.stringify({full_name:"Новый Библиотекарь",email:pm.environment.get("newLibEmail"),password:pm.environment.get("newPassword")}));
+  language: text/javascript
+- type: afterResponse
+  code: |-
+    pm.test("Статус 201", () => pm.response.to.have.status(201));
+    const j = pm.response.json();
+  language: text/javascript
+order: 3000

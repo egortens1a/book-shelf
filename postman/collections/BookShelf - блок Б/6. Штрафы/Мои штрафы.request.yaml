@@ -1,0 +1,15 @@
+$kind: http-request
+description: История штрафов и сумма неоплаченных одним ответом.
+url: '{{baseUrl}}/me/fines'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{subscriberToken}}'
+scripts:
+- type: afterResponse
+  code: |-
+    const items = pm.response.json().items;
+    if (items.length) pm.environment.set('fineId', items[0].id);
+  language: text/javascript
+order: 1000

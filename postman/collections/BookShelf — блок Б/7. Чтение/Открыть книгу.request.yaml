@@ -1,5 +1,0 @@
-$kind: http-request
-description: Текст и позиция, с которой читатель продолжит. Для книги с доступом SUBSCRIPTION нужна действующая подписка, иначе 403.
-url: "{{baseUrl}}/books/{{bookId}}/read"
-method: GET
-order: 1000

@@ -1,0 +1,23 @@
+$kind: http-request
+description: 'Инвентарный номер уникален: повторный номер даёт 409, а не ошибку базы.'
+url: '{{baseUrl}}/books/{{loanBookId}}/copies'
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "inventory_number": "{{inventoryNumber}}"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: '{{librarianToken}}'
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test('201', () => pm.response.to.have.status(201));
+    pm.environment.set('copyId', pm.response.json().id);
+  language: text/javascript
+order: 1000

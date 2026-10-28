@@ -1,5 +1,0 @@
-$kind: http-request
-description: Каталог, пользователи, брони, подписки и штрафы. Читателю прилетит 403.
-url: "{{baseUrl}}/admin/stats"
-method: GET
-order: 1000

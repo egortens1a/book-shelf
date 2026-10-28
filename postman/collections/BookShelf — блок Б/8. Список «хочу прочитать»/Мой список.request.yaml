@@ -1,5 +1,0 @@
-$kind: http-request
-description: Книги с авторами и жанрами, недавно добавленные сверху.
-url: "{{baseUrl}}/me/wishlist"
-method: GET
-order: 1000

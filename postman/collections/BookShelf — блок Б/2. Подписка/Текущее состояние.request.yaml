@@ -1,5 +1,0 @@
-$kind: http-request
-description: Действующая подписка, отложенная и флаг доступа. Доступ считается по датам, а не по статусу.
-url: "{{baseUrl}}/me/subscription"
-method: GET
-order: 2000
