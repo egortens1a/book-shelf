@@ -1,0 +1,26 @@
+$kind: http-request
+url: '{{baseUrl}}/authors/{{authorId}}'
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "full_name": "x"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: '{{adminToken}}'
+scripts:
+- type: beforeRequest
+  code: pm.request.body.update(JSON.stringify({name:"Renamed author "+Date.now()}));
+  language: text/javascript
+- type: afterResponse
+  code: |-
+    pm.test("Статус 200", () => pm.response.to.have.status(200));
+    const j = pm.response.json();
+    pm.test("Переименован", () => pm.expect(j.full_name.toLowerCase()).to.include("renamed"));
+  language: text/javascript
+order: 14000

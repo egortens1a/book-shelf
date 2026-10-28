@@ -1,0 +1,25 @@
+$kind: http-request
+name: 'Подготовка: черновик для удаления'
+url: '{{baseUrl}}/librarian/books'
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "To delete",
+      "description": "x"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: '{{librarianToken}}'
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test("Статус 201", () => pm.response.to.have.status(201));
+    const j = pm.response.json();
+    pm.environment.set("deleteBookId", j.id);
+  language: text/javascript
+order: 20000

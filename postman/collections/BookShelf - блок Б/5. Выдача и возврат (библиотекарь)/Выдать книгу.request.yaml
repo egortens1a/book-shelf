@@ -1,0 +1,9 @@
+$kind: http-request
+description: Если срок получения истёк, бронь закрывается, экземпляр возвращается на полку, ответ 409.
+url: '{{baseUrl}}/librarian/reservations/{{reservationId}}/issue'
+method: POST
+auth:
+  type: bearer
+  credentials:
+    token: '{{librarianToken}}'
+order: 2000

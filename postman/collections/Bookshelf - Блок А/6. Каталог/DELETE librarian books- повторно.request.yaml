@@ -1,0 +1,13 @@
+$kind: http-request
+name: 'DELETE librarian books: повторно'
+url: '{{baseUrl}}/librarian/books/{{deleteBookId}}'
+method: DELETE
+auth:
+  type: bearer
+  credentials:
+    token: '{{librarianToken}}'
+scripts:
+- type: afterResponse
+  code: pm.test("Статус 404", () => pm.response.to.have.status(404));
+  language: text/javascript
+order: 22000

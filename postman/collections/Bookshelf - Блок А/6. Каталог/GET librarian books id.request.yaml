@@ -1,0 +1,12 @@
+$kind: http-request
+url: '{{baseUrl}}/librarian/books/{{bookId}}'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{librarianToken}}'
+scripts:
+- type: afterResponse
+  code: pm.test("Статус 200", () => pm.response.to.have.status(200));
+  language: text/javascript
+order: 9000

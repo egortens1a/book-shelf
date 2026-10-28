@@ -1,0 +1,8 @@
+$kind: http-request
+url: '{{baseUrl}}/admin/stats'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{subscriberToken}}'
+order: 2000

@@ -1,0 +1,23 @@
+$kind: http-request
+url: '{{baseUrl}}/librarian/books/{{bookId}}'
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "description": "Новое описание"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: '{{librarianToken}}'
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test("Статус 200", () => pm.response.to.have.status(200));
+    const j = pm.response.json();
+    pm.test("Описание обновлено", () => pm.expect(j.description).to.eql("Новое описание"));
+  language: text/javascript
+order: 11000

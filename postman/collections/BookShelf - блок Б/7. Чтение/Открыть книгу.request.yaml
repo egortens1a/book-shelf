@@ -1,0 +1,9 @@
+$kind: http-request
+description: Текст и позиция, с которой читатель продолжит. Для книги с доступом SUBSCRIPTION нужна действующая подписка, иначе 403.
+url: '{{baseUrl}}/books/{{readBookId}}/read'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{subscriberToken}}'
+order: 1000

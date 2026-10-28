@@ -1,0 +1,9 @@
+$kind: http-request
+description: Действующая подписка, отложенная и флаг доступа. Доступ считается по датам, а не по статусу.
+url: '{{baseUrl}}/me/subscription'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{subscriberToken}}'
+order: 2000

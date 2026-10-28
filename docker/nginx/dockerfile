@@ -3,4 +3,15 @@ FROM nginx:latest
 
 RUN rm /etc/nginx/conf.d/default.conf
 
+# Самоподписанный сертификат для localhost (только для учебного проекта).
+# Создаётся при сборке образа, в репозитории ключей нет.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /etc/nginx/certs \
+    && openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
+        -keyout /etc/nginx/certs/server.key \
+        -out /etc/nginx/certs/server.crt \
+        -subj "/CN=localhost" \
+        -addext "subjectAltName=DNS:bookshelf.localhost,IP:127.0.0.1"
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
