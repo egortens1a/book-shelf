@@ -1,0 +1,9 @@
+$kind: http-request
+description: Списать можно только свободный экземпляр. Забронированный или выданный даёт 409.
+url: '{{baseUrl}}/copies/{{copyId}}/write-off'
+method: POST
+auth:
+  type: bearer
+  credentials:
+    token: '{{librarianToken}}'
+order: 300000

@@ -1,0 +1,13 @@
+$kind: http-request
+name: 'DELETE rating: повторно'
+url: '{{baseUrl}}/books/{{ratedBookId}}/rating'
+method: DELETE
+auth:
+  type: bearer
+  credentials:
+    token: '{{readerToken}}'
+scripts:
+- type: afterResponse
+  code: pm.test("Статус один из [404, 409]", () => pm.expect([404, 409]).to.include(pm.response.code));
+  language: text/javascript
+order: 6000

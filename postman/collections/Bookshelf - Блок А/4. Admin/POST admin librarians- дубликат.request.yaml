@@ -1,0 +1,23 @@
+$kind: http-request
+name: 'POST admin librarians: дубликат'
+url: '{{baseUrl}}/admin/librarians'
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "full_name": "Дубль",
+      "email": "{{newLibEmail}}",
+      "password": "{{newPassword}}"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: '{{adminToken}}'
+scripts:
+- type: afterResponse
+  code: pm.test("Статус 409", () => pm.response.to.have.status(409));
+  language: text/javascript
+order: 4000

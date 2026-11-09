@@ -1,0 +1,28 @@
+$kind: http-request
+url: '{{baseUrl}}/me/interests'
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "genre_ids": [
+        1
+      ]
+    }
+auth:
+  type: bearer
+  credentials:
+    token: '{{readerToken}}'
+scripts:
+- type: beforeRequest
+  code: pm.request.body.update(JSON.stringify({genre_ids:[Number(pm.environment.get("seedGenreId"))]}));
+  language: text/javascript
+- type: afterResponse
+  code: |-
+    pm.test("Статус 200", () => pm.response.to.have.status(200));
+    const j = pm.response.json();
+    pm.test("Сохранено", () => pm.expect(j.genre_ids).to.include(Number(pm.environment.get("seedGenreId"))));
+  language: text/javascript
+order: 6000

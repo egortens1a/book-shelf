@@ -1,31 +1,15 @@
 {
   "info": {
     "name": "BookShelf — блок Б",
-    "description": "Подписки, экземпляры, бронирование, штрафы, чтение, список желаний и статистика.\n\nПеред запуском: поднять базу и накатить тестовые данные (python -m app.scripts.seed), затем запустить API (python -m app.main).\n\nПапки идут в порядке сценария: сначала вход всеми тремя ролями, дальше подписка, экземпляр, бронь, выдача, возврат. Идентификаторы созданных объектов тесты сохраняют в переменные коллекции сами.",
+    "description": "Подписки, экземпляры, бронирование, штрафы, чтение, список желаний и статистика.\n\nПеред запуском: поднять базу и накатить тестовые данные (python -m app.scripts.seed), затем запустить API (python -m app.main).\n\nПапки идут в порядке сценария: сначала вход всеми тремя ролями, дальше подписка, экземпляр, бронь, выдача, возврат. Идентификаторы созданных объектов тесты сохраняют в переменные коллекции сами.\n\nОкружение: выберите «Bookshelf local». Все переменные (учётные записи, токены, id созданных объектов) хранятся только в нём, в самих коллекциях переменных нет. Данные: python -m app.scripts.seed.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "variable": [
-    { "key": "baseUrl", "value": "http://127.0.0.1:8000" },
-    { "key": "password", "value": "seed-password" },
-    { "key": "readerEmail", "value": "anna@loans.seed" },
-    { "key": "librarianEmail", "value": "maria@loans.seed" },
-    { "key": "adminEmail", "value": "admin@catalog.seed" },
-    { "key": "readerToken", "value": "" },
-    { "key": "librarianToken", "value": "" },
-    { "key": "adminToken", "value": "" },
-    { "key": "bookId", "value": "1" },
-    { "key": "genreId", "value": "1" },
-    { "key": "copyId", "value": "" },
-    { "key": "reservationId", "value": "" },
-    { "key": "fineId", "value": "" },
-    { "key": "inventoryNumber", "value": "INV-9001" }
-  ],
   "item": [
     {
       "name": "1. Вход",
       "item": [
         {
-          "name": "Читатель",
+          "name": "Читатель с подпиской",
           "event": [
             {
               "listen": "test",
@@ -34,7 +18,7 @@
                 "exec": [
                   "pm.test('200', () => pm.response.to.have.status(200));",
                   "const t = pm.response.json().access_token;",
-                  "pm.collectionVariables.set('readerToken', t);"
+                  "pm.environment.set('subscriberToken', t);"
                 ]
               }
             }
@@ -45,12 +29,29 @@
             "body": {
               "mode": "urlencoded",
               "urlencoded": [
-                { "key": "username", "value": "{{readerEmail}}" },
-                { "key": "password", "value": "{{password}}" }
+                {
+                  "key": "username",
+                  "value": "{{subscriberEmail}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{subscriberPassword}}"
+                }
               ]
             },
-            "url": { "raw": "{{baseUrl}}/login", "host": ["{{baseUrl}}"], "path": ["login"] },
-            "description": "OAuth2 password flow: форма, а не JSON. Токен сохраняется в readerToken."
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Пользователь с активной подпиской (anna@loans.seed, seed_loans). OAuth2 password flow: форма, а не JSON. Токен сохраняется в subscriberToken.",
+            "auth": {
+              "type": "noauth"
+            }
           }
         },
         {
@@ -62,7 +63,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('200', () => pm.response.to.have.status(200));",
-                  "pm.collectionVariables.set('librarianToken', pm.response.json().access_token);"
+                  "pm.environment.set('librarianToken', pm.response.json().access_token);"
                 ]
               }
             }
@@ -73,11 +74,28 @@
             "body": {
               "mode": "urlencoded",
               "urlencoded": [
-                { "key": "username", "value": "{{librarianEmail}}" },
-                { "key": "password", "value": "{{password}}" }
+                {
+                  "key": "username",
+                  "value": "{{librarianEmail}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{librarianPassword}}"
+                }
               ]
             },
-            "url": { "raw": "{{baseUrl}}/login", "host": ["{{baseUrl}}"], "path": ["login"] }
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
           }
         },
         {
@@ -89,7 +107,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('200', () => pm.response.to.have.status(200));",
-                  "pm.collectionVariables.set('adminToken', pm.response.json().access_token);"
+                  "pm.environment.set('adminToken', pm.response.json().access_token);"
                 ]
               }
             }
@@ -100,11 +118,28 @@
             "body": {
               "mode": "urlencoded",
               "urlencoded": [
-                { "key": "username", "value": "{{adminEmail}}" },
-                { "key": "password", "value": "{{password}}" }
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}"
+                }
               ]
             },
-            "url": { "raw": "{{baseUrl}}/login", "host": ["{{baseUrl}}"], "path": ["login"] }
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
           }
         }
       ]
@@ -114,31 +149,112 @@
       "item": [
         {
           "name": "Оформить подписку",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "POST",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/me/subscription", "host": ["{{baseUrl}}"], "path": ["me", "subscription"] },
-            "description": "Тела нет: цена и срок берутся из настроек. Повторный вызов при действующей подписке ставит продление в очередь (PENDING), третий даёт 409."
+            "url": {
+              "raw": "{{baseUrl}}/me/subscription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "subscription"
+              ]
+            },
+            "description": "Тела нет: цена и срок берутся из настроек. Повторный вызов при действующей подписке ставит продление в очередь (PENDING), третий даёт 409.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Текущее состояние",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/me/subscription", "host": ["{{baseUrl}}"], "path": ["me", "subscription"] },
-            "description": "Действующая подписка, отложенная и флаг доступа. Доступ считается по датам, а не по статусу."
+            "url": {
+              "raw": "{{baseUrl}}/me/subscription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "subscription"
+              ]
+            },
+            "description": "Действующая подписка, отложенная и флаг доступа. Доступ считается по датам, а не по статусу.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "История подписок",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/me/subscriptions", "host": ["{{baseUrl}}"], "path": ["me", "subscriptions"] }
+            "url": {
+              "raw": "{{baseUrl}}/me/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "subscriptions"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -148,7 +264,15 @@
       "item": [
         {
           "name": "Добавить экземпляр",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{librarianToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{librarianToken}}"
+              }
+            ]
+          },
           "event": [
             {
               "listen": "test",
@@ -156,48 +280,82 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('201', () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set('copyId', pm.response.json().id);"
+                  "pm.environment.set('copyId', pm.response.json().id);"
                 ]
               }
             }
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"inventory_number\": \"{{inventoryNumber}}\"\n}" },
-            "url": {
-              "raw": "{{baseUrl}}/books/{{bookId}}/copies",
-              "host": ["{{baseUrl}}"],
-              "path": ["books", "{{bookId}}", "copies"]
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"inventory_number\": \"{{inventoryNumber}}\"\n}"
             },
-            "description": "Инвентарный номер уникален: повторный номер даёт 409, а не ошибку базы."
-          }
-        },
-        {
-          "name": "Экземпляры книги",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{librarianToken}}" }] },
-          "request": {
-            "method": "GET",
-            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/books/{{bookId}}/copies",
-              "host": ["{{baseUrl}}"],
-              "path": ["books", "{{bookId}}", "copies"]
+              "raw": "{{baseUrl}}/books/{{loanBookId}}/copies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "books",
+                "{{loanBookId}}",
+                "copies"
+              ]
+            },
+            "description": "Инвентарный номер уникален: повторный номер даёт 409, а не ошибку базы.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarianToken}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
         {
-          "name": "Списать экземпляр",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{librarianToken}}" }] },
+          "name": "Экземпляры книги",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{librarianToken}}"
+              }
+            ]
+          },
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/copies/{{copyId}}/write-off",
-              "host": ["{{baseUrl}}"],
-              "path": ["copies", "{{copyId}}", "write-off"]
+              "raw": "{{baseUrl}}/books/{{loanBookId}}/copies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "books",
+                "{{loanBookId}}",
+                "copies"
+              ]
             },
-            "description": "Списать можно только свободный экземпляр. Забронированный или выданный даёт 409."
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarianToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -207,7 +365,15 @@
       "item": [
         {
           "name": "Забронировать книгу",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "event": [
             {
               "listen": "test",
@@ -215,41 +381,81 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('201', () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set('reservationId', pm.response.json().id);"
+                  "pm.environment.set('reservationId', pm.response.json().id);"
                 ]
               }
             }
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"book_id\": {{bookId}}\n}" },
-            "url": { "raw": "{{baseUrl}}/me/reservations", "host": ["{{baseUrl}}"], "path": ["me", "reservations"] },
-            "description": "Нужна действующая подписка, отсутствие просрочек и неоплаченных штрафов, лимит одновременных броней. Свободный экземпляр выбирается под блокировкой."
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"book_id\": {{loanBookId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/me/reservations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "reservations"
+              ]
+            },
+            "description": "Нужна действующая подписка, отсутствие просрочек и неоплаченных штрафов, лимит одновременных броней. Свободный экземпляр выбирается под блокировкой.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Мои брони",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/me/reservations", "host": ["{{baseUrl}}"], "path": ["me", "reservations"] },
-            "description": "В карточке есть название книги, инвентарный номер и расчётная пеня, если срок уже вышел."
-          }
-        },
-        {
-          "name": "Отменить бронь",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
-          "request": {
-            "method": "POST",
-            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/me/reservations/{{reservationId}}/cancel",
-              "host": ["{{baseUrl}}"],
-              "path": ["me", "reservations", "{{reservationId}}", "cancel"]
+              "raw": "{{baseUrl}}/me/reservations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "reservations"
+              ]
             },
-            "description": "Отменить можно только бронь в статусе CREATED. Чужая бронь даёт 404, а не 403."
+            "description": "В карточке есть название книги, инвентарный номер и расчётная пеня, если срок уже вышел.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -259,64 +465,179 @@
       "item": [
         {
           "name": "Список броней",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{librarianToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{librarianToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/librarian/reservations?status=CREATED&limit=50&offset=0",
-              "host": ["{{baseUrl}}"],
-              "path": ["librarian", "reservations"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "librarian",
+                "reservations"
+              ],
               "query": [
-                { "key": "status", "value": "CREATED" },
-                { "key": "user_id", "value": "", "disabled": true },
-                { "key": "inventory_number", "value": "", "disabled": true },
-                { "key": "limit", "value": "50" },
-                { "key": "offset", "value": "0" }
+                {
+                  "key": "status",
+                  "value": "CREATED"
+                },
+                {
+                  "key": "user_id",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "inventory_number",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarianToken}}",
+                  "type": "string"
+                }
               ]
             }
           }
         },
         {
           "name": "Выдать книгу",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{librarianToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{librarianToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "POST",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/librarian/reservations/{{reservationId}}/issue",
-              "host": ["{{baseUrl}}"],
-              "path": ["librarian", "reservations", "{{reservationId}}", "issue"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "librarian",
+                "reservations",
+                "{{reservationId}}",
+                "issue"
+              ]
             },
-            "description": "Если срок получения истёк, бронь закрывается, экземпляр возвращается на полку, ответ 409."
+            "description": "Если срок получения истёк, бронь закрывается, экземпляр возвращается на полку, ответ 409.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarianToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Принять возврат",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{librarianToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{librarianToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "POST",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/librarian/reservations/{{reservationId}}/return",
-              "host": ["{{baseUrl}}"],
-              "path": ["librarian", "reservations", "{{reservationId}}", "return"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "librarian",
+                "reservations",
+                "{{reservationId}}",
+                "return"
+              ]
             },
-            "description": "При просрочке в ответе появляется начисленный штраф, иначе поле fine равно null."
+            "description": "При просрочке в ответе появляется начисленный штраф, иначе поле fine равно null.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarianToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Отметить утерю",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{librarianToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{librarianToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "POST",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/librarian/reservations/{{reservationId}}/lost",
-              "host": ["{{baseUrl}}"],
-              "path": ["librarian", "reservations", "{{reservationId}}", "lost"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "librarian",
+                "reservations",
+                "{{reservationId}}",
+                "lost"
+              ]
             },
-            "description": "Фиксированный штраф за утерю. Экземпляр переходит в LOST и из оборота выбывает."
+            "description": "Фиксированный штраф за утерю. Экземпляр переходит в LOST и из оборота выбывает.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarianToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -326,7 +647,15 @@
       "item": [
         {
           "name": "Мои штрафы",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "event": [
             {
               "listen": "test",
@@ -334,7 +663,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "const items = pm.response.json().items;",
-                  "if (items.length) pm.collectionVariables.set('fineId', items[0].id);"
+                  "if (items.length) pm.environment.set('fineId', items[0].id);"
                 ]
               }
             }
@@ -342,22 +671,66 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/me/fines", "host": ["{{baseUrl}}"], "path": ["me", "fines"] },
-            "description": "История штрафов и сумма неоплаченных одним ответом."
+            "url": {
+              "raw": "{{baseUrl}}/me/fines",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "fines"
+              ]
+            },
+            "description": "История штрафов и сумма неоплаченных одним ответом.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Отметить оплату",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{librarianToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{librarianToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "POST",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/librarian/fines/{{fineId}}/pay",
-              "host": ["{{baseUrl}}"],
-              "path": ["librarian", "fines", "{{fineId}}", "pay"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "librarian",
+                "fines",
+                "{{fineId}}",
+                "pay"
+              ]
             },
-            "description": "Идемпотентно: повторная оплата возвращает тот же штраф, а не ошибку."
+            "description": "Идемпотентно: повторная оплата возвращает тот же штраф, а не ошибку.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarianToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -367,44 +740,124 @@
       "item": [
         {
           "name": "Открыть книгу",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/books/{{bookId}}/read",
-              "host": ["{{baseUrl}}"],
-              "path": ["books", "{{bookId}}", "read"]
+              "raw": "{{baseUrl}}/books/{{readBookId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "books",
+                "{{readBookId}}",
+                "read"
+              ]
             },
-            "description": "Текст и позиция, с которой читатель продолжит. Для книги с доступом SUBSCRIPTION нужна действующая подписка, иначе 403."
+            "description": "Текст и позиция, с которой читатель продолжит. Для книги с доступом SUBSCRIPTION нужна действующая подписка, иначе 403.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Прогресс чтения",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/books/{{bookId}}/progress",
-              "host": ["{{baseUrl}}"],
-              "path": ["books", "{{bookId}}", "progress"]
+              "raw": "{{baseUrl}}/books/{{readBookId}}/progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "books",
+                "{{readBookId}}",
+                "progress"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
         {
           "name": "Сохранить позицию",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "PUT",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"position\": 10\n}" },
-            "url": {
-              "raw": "{{baseUrl}}/books/{{bookId}}/progress",
-              "host": ["{{baseUrl}}"],
-              "path": ["books", "{{bookId}}", "progress"]
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"position\": 10\n}"
             },
-            "description": "PUT, потому что операция идемпотентна. Позиция за пределами текста даёт 422. Дойдя до конца, книга помечается прочитанной — и её можно оценить."
+            "url": {
+              "raw": "{{baseUrl}}/books/{{readBookId}}/progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "books",
+                "{{readBookId}}",
+                "progress"
+              ]
+            },
+            "description": "PUT, потому что операция идемпотентна. Позиция за пределами текста даёт 422. Дойдя до конца, книга помечается прочитанной — и её можно оценить.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -414,40 +867,115 @@
       "item": [
         {
           "name": "Мой список",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/me/wishlist", "host": ["{{baseUrl}}"], "path": ["me", "wishlist"] },
-            "description": "Книги с авторами и жанрами, недавно добавленные сверху."
+            "url": {
+              "raw": "{{baseUrl}}/me/wishlist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "wishlist"
+              ]
+            },
+            "description": "Книги с авторами и жанрами, недавно добавленные сверху.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Добавить книгу",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "PUT",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/me/wishlist/{{bookId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["me", "wishlist", "{{bookId}}"]
+              "raw": "{{baseUrl}}/me/wishlist/{{loanBookId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "wishlist",
+                "{{loanBookId}}"
+              ]
             },
-            "description": "PUT, а не POST: повторное добавление не ошибка и список не меняет. Неопубликованная книга даёт 404."
+            "description": "PUT, а не POST: повторное добавление не ошибка и список не меняет. Неопубликованная книга даёт 404.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Убрать книгу",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/me/wishlist/{{bookId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["me", "wishlist", "{{bookId}}"]
+              "raw": "{{baseUrl}}/me/wishlist/{{loanBookId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "wishlist",
+                "{{loanBookId}}"
+              ]
             },
-            "description": "Тоже идемпотентно: удаление отсутствующей книги не ошибка."
+            "description": "Тоже идемпотентно: удаление отсутствующей книги не ошибка.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -457,30 +985,87 @@
       "item": [
         {
           "name": "Сводка",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}" }] },
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": { "raw": "{{baseUrl}}/admin/stats", "host": ["{{baseUrl}}"], "path": ["admin", "stats"] },
-            "description": "Каталог, пользователи, брони, подписки и штрафы. Читателю прилетит 403."
-          }
-        },
-        {
-          "name": "Рейтинг книг жанра",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{adminToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/admin/stats/top?genre_id={{genreId}}&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "stats", "top"],
-              "query": [
-                { "key": "genre_id", "value": "{{genreId}}" },
-                { "key": "limit", "value": "10" }
+              "raw": "{{baseUrl}}/admin/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "stats"
               ]
             },
-            "description": "Только опубликованные книги с оценками. limit ограничен 1..50, иначе 422."
+            "description": "Каталог, пользователи, брони, подписки и штрафы. Читателю прилетит 403.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Рейтинг книг жанра",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{adminToken}}"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/stats/top?genre_id={{statsGenreId}}&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "stats",
+                "top"
+              ],
+              "query": [
+                {
+                  "key": "genre_id",
+                  "value": "{{statsGenreId}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Только опубликованные книги с оценками. limit ограничен 1..50, иначе 422.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -493,41 +1078,270 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/me/reservations", "host": ["{{baseUrl}}"], "path": ["me", "reservations"] }
+            "url": {
+              "raw": "{{baseUrl}}/me/reservations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "reservations"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
           }
         },
         {
           "name": "Читатель в админку — 403",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/admin/stats", "host": ["{{baseUrl}}"], "path": ["admin", "stats"] }
+            "url": {
+              "raw": "{{baseUrl}}/admin/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "stats"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
           "name": "Читатель выдаёт книгу — 403",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "POST",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/librarian/reservations/{{reservationId}}/issue",
-              "host": ["{{baseUrl}}"],
-              "path": ["librarian", "reservations", "{{reservationId}}", "issue"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "librarian",
+                "reservations",
+                "{{reservationId}}",
+                "issue"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
         {
           "name": "Несуществующая книга — 404",
-          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{readerToken}}" }] },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
           "request": {
             "method": "PUT",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/me/wishlist/999999",
-              "host": ["{{baseUrl}}"],
-              "path": ["me", "wishlist", "999999"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "wishlist",
+                "999999"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Отмена брони и списание экземпляра",
+      "description": "Вынесено в конец, чтобы не ломать основной сценарий: отмена возможна только до выдачи, а списание убирает экземпляр из выдачи. Для отмены бронируется книга ещё раз.",
+      "item": [
+        {
+          "name": "Забронировать книгу (для отмены)",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('reservationId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"book_id\": {{loanBookId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/me/reservations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "reservations"
+              ]
+            },
+            "description": "Нужна действующая подписка, отсутствие просрочек и неоплаченных штрафов, лимит одновременных броней. Свободный экземпляр выбирается под блокировкой.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Отменить бронь",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{subscriberToken}}"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/reservations/{{reservationId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "reservations",
+                "{{reservationId}}",
+                "cancel"
+              ]
+            },
+            "description": "Отменить можно только бронь в статусе CREATED. Чужая бронь даёт 404, а не 403.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{subscriberToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Списать экземпляр",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{librarianToken}}"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/copies/{{copyId}}/write-off",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "copies",
+                "{{copyId}}",
+                "write-off"
+              ]
+            },
+            "description": "Списать можно только свободный экземпляр. Забронированный или выданный даёт 409.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarianToken}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         }

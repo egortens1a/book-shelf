@@ -1,0 +1,15 @@
+$kind: http-request
+url: '{{baseUrl}}/books/{{ratedBookId}}'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{readerToken}}'
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test("Статус 200", () => pm.response.to.have.status(200));
+    const j = pm.response.json();
+    pm.test("Карточка без text_content", () => { pm.expect(j).to.include.keys("copies_available","rating"); pm.expect(j).to.not.have.property("text_content"); });
+  language: text/javascript
+order: 3000

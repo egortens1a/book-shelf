@@ -1,0 +1,19 @@
+$kind: http-request
+description: 'Пользователь с активной подпиской (anna@loans.seed, seed_loans). OAuth2 password flow: форма, а не JSON. Токен сохраняется в subscriberToken.'
+url: '{{baseUrl}}/login'
+method: POST
+body:
+  type: urlencoded
+  content:
+    username: '{{subscriberEmail}}'
+    password: '{{subscriberPassword}}'
+auth:
+  type: noauth
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test('200', () => pm.response.to.have.status(200));
+    const t = pm.response.json().access_token;
+    pm.environment.set('subscriberToken', t);
+  language: text/javascript
+order: 1000

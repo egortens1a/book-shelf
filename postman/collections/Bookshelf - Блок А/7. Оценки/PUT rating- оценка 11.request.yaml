@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'PUT rating: оценка 11'
+url: '{{baseUrl}}/books/{{ratedBookId}}/rating'
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "score": 11
+    }
+auth:
+  type: bearer
+  credentials:
+    token: '{{readerToken}}'
+scripts:
+- type: afterResponse
+  code: pm.test("Статус 422", () => pm.response.to.have.status(422));
+  language: text/javascript
+order: 2000

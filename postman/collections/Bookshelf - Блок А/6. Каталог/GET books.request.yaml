@@ -1,0 +1,18 @@
+$kind: http-request
+url: '{{baseUrl}}/books?title={{ratedBookTitle}}'
+method: GET
+queryParams:
+  title: '{{ratedBookTitle}}'
+auth:
+  type: bearer
+  credentials:
+    token: '{{readerToken}}'
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test("Статус 200", () => pm.response.to.have.status(200));
+    const j = pm.response.json();
+    pm.test("Нашлась книга из seed", () => pm.expect(j.length).to.be.above(0));
+    pm.environment.set("ratedBookId", (j.find(b => b.title === pm.environment.get('ratedBookTitle')) || j[0]).id);
+  language: text/javascript
+order: 1000

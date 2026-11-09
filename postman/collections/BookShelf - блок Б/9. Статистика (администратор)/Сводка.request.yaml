@@ -1,0 +1,9 @@
+$kind: http-request
+description: Каталог, пользователи, брони, подписки и штрафы. Читателю прилетит 403.
+url: '{{baseUrl}}/admin/stats'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{adminToken}}'
+order: 1000

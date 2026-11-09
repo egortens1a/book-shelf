@@ -1,0 +1,16 @@
+$kind: http-request
+url: '{{baseUrl}}/genres'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{readerToken}}'
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test("Статус 200", () => pm.response.to.have.status(200));
+    const j = pm.response.json();
+    pm.test("Массив", () => pm.expect(j).to.be.an("array").that.is.not.empty);
+    pm.environment.set("catGenreId", j[0].id);
+  language: text/javascript
+order: 1000

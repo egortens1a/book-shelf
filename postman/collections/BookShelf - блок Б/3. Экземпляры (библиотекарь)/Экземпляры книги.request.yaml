@@ -1,0 +1,8 @@
+$kind: http-request
+url: '{{baseUrl}}/books/{{loanBookId}}/copies'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{librarianToken}}'
+order: 2000

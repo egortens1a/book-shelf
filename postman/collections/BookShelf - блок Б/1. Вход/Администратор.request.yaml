@@ -1,0 +1,17 @@
+$kind: http-request
+url: '{{baseUrl}}/login'
+method: POST
+body:
+  type: urlencoded
+  content:
+    username: '{{adminEmail}}'
+    password: '{{adminPassword}}'
+auth:
+  type: noauth
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test('200', () => pm.response.to.have.status(200));
+    pm.environment.set('adminToken', pm.response.json().access_token);
+  language: text/javascript
+order: 3000

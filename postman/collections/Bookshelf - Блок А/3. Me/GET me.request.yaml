@@ -1,0 +1,15 @@
+$kind: http-request
+url: '{{baseUrl}}/me'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{readerToken}}'
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test("Статус 200", () => pm.response.to.have.status(200));
+    const j = pm.response.json();
+    pm.test("role=reader", () => pm.expect(String(j.role).toLowerCase()).to.eql("reader"));
+  language: text/javascript
+order: 2000

@@ -1,0 +1,19 @@
+$kind: http-request
+url: '{{baseUrl}}/login'
+method: POST
+body:
+  type: urlencoded
+  content:
+    username: '{{readerEmail}}'
+    password: '{{readerPassword}}'
+auth:
+  type: noauth
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test("Статус 200", () => pm.response.to.have.status(200));
+    const j = pm.response.json();
+    pm.test("Есть access_token", () => pm.expect(j.access_token).to.be.a("string").and.not.empty);
+    pm.environment.set("readerToken", j.access_token);
+  language: text/javascript
+order: 3000

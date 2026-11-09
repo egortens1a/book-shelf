@@ -1,0 +1,9 @@
+$kind: http-request
+description: Книги с авторами и жанрами, недавно добавленные сверху.
+url: '{{baseUrl}}/me/wishlist'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{subscriberToken}}'
+order: 1000

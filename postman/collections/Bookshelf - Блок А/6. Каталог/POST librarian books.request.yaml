@@ -1,0 +1,36 @@
+$kind: http-request
+url: '{{baseUrl}}/librarian/books'
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "x",
+      "description": "Описание",
+      "author_ids": [
+        1
+      ],
+      "genre_ids": [
+        1
+      ]
+    }
+auth:
+  type: bearer
+  credentials:
+    token: '{{librarianToken}}'
+scripts:
+- type: beforeRequest
+  code: |-
+    pm.environment.set("draftTitle","Draft "+Date.now());
+    pm.request.body.update(JSON.stringify({title:pm.environment.get("draftTitle"),description:"Описание",publication_year:2024,author_ids:[Number(pm.environment.get("catAuthorId"))],genre_ids:[Number(pm.environment.get("catGenreId"))]}));
+  language: text/javascript
+- type: afterResponse
+  code: |-
+    pm.test("Статус 201", () => pm.response.to.have.status(201));
+    const j = pm.response.json();
+    pm.test("draft", () => pm.expect(String(j.status).toLowerCase()).to.eql("draft"));
+    pm.environment.set("bookId", j.id);
+  language: text/javascript
+order: 5000

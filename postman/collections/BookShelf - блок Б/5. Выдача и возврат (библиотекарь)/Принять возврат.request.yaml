@@ -1,0 +1,9 @@
+$kind: http-request
+description: При просрочке в ответе появляется начисленный штраф, иначе поле fine равно null.
+url: '{{baseUrl}}/librarian/reservations/{{reservationId}}/return'
+method: POST
+auth:
+  type: bearer
+  credentials:
+    token: '{{librarianToken}}'
+order: 3000

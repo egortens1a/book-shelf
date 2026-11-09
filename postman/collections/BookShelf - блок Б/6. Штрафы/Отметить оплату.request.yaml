@@ -1,0 +1,9 @@
+$kind: http-request
+description: 'Идемпотентно: повторная оплата возвращает тот же штраф, а не ошибку.'
+url: '{{baseUrl}}/librarian/fines/{{fineId}}/pay'
+method: POST
+auth:
+  type: bearer
+  credentials:
+    token: '{{librarianToken}}'
+order: 2000

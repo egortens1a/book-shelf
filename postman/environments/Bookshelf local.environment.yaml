@@ -1,0 +1,74 @@
+name: Bookshelf local
+values:
+  - key: baseUrl
+    value: 'https://localhost'
+  - key: adminEmail
+    value: admin@bookshelf.local
+  - key: adminPassword
+    value: Admin-Pass-123
+  - key: librarianEmail
+    value: librarian@bookshelf.local
+  - key: librarianPassword
+    value: Librarian-Pass-123
+  - key: readerEmail
+    value: reader@bookshelf.local
+  - key: readerPassword
+    value: Reader-Pass-123
+  - key: subscriberEmail
+    value: anna@loans.seed
+  - key: subscriberPassword
+    value: seed-password
+  - key: newPassword
+    value: New-Pass-12345
+  - key: ratedBookTitle
+    value: Книга для оценки API
+  - key: accessTypeFree
+    value: FREE
+  - key: inventoryNumber
+    value: INV-9001
+  - key: loanBookId
+    value: '21'
+  - key: readBookId
+    value: '1'
+  - key: statsGenreId
+    value: '1'
+  - key: adminToken
+    value: ''
+  - key: librarianToken
+    value: ''
+  - key: readerToken
+    value: ''
+  - key: subscriberToken
+    value: ''
+  - key: newReaderToken
+    value: ''
+  - key: newEmail
+    value: ''
+  - key: newLibEmail
+    value: ''
+  - key: newReaderId
+    value: ''
+  - key: seedGenreId
+    value: ''
+  - key: catGenreId
+    value: ''
+  - key: catAuthorId
+    value: ''
+  - key: genreId
+    value: ''
+  - key: authorId
+    value: ''
+  - key: bookId
+    value: ''
+  - key: draftTitle
+    value: ''
+  - key: ratedBookId
+    value: ''
+  - key: deleteBookId
+    value: ''
+  - key: copyId
+    value: ''
+  - key: reservationId
+    value: ''
+  - key: fineId
+    value: ''
