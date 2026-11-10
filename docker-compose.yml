@@ -1,19 +1,21 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:18
     container_name: bookshelf-db
     environment:
-      POSTGRES_USER: bookshelf
-      POSTGRES_PASSWORD: bookshelf
-      POSTGRES_DB: bookshelf
+      # Значения по умолчанию совпадают с .env.example. Синтаксис ${VAR:-default}
+      # нужен, чтобы те же значения подставились в DATABASE_URL и в healthcheck:
+      # compose разрешает ${...} при чтении файла и о блоке environment не знает.
+      POSTGRES_USER: ${POSTGRES_USER:-bookshelf}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bookshelf}
+      POSTGRES_DB: ${POSTGRES_DB:-bookshelf}
     ports:
       - "5432:5432"
     volumes:
       - bookshelf_pgdata:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test:
+        ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bookshelf} -d ${POSTGRES_DB:-bookshelf}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -25,14 +27,17 @@ services:
     container_name: bookshelf-api
     environment:
       # Переопределяем DATABASE_URL: внутри Docker сеть имя сервиса = хост
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-bookshelf}:${POSTGRES_PASSWORD:-bookshelf}@db:5432/${POSTGRES_DB:-bookshelf}
+      # Без значения по умолчанию: секрет задаётся только в .env
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      RESERVATION_HOURS: ${RESERVATION_HOURS}
-      LOAN_DAYS: ${LOAN_DAYS}
-      MAX_ACTIVE_RESERVATIONS: ${MAX_ACTIVE_RESERVATIONS}
-      FINE_PER_DAY: ${FINE_PER_DAY}
-      FINE_LOST: ${FINE_LOST}
-      SUBSCRIPTION_PRICE: ${SUBSCRIPTION_PRICE}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      RESERVATION_HOURS: ${RESERVATION_HOURS:-48}
+      LOAN_DAYS: ${LOAN_DAYS:-14}
+      MAX_ACTIVE_RESERVATIONS: ${MAX_ACTIVE_RESERVATIONS:-3}
+      FINE_PER_DAY: ${FINE_PER_DAY:-50.00}
+      FINE_LOST: ${FINE_LOST:-1500.00}
+      SUBSCRIPTION_PRICE: ${SUBSCRIPTION_PRICE:-299.00}
+      SUBSCRIPTION_DAYS: ${SUBSCRIPTION_DAYS:-30}
     depends_on:
       db:
         condition: service_healthy
