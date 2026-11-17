@@ -1,0 +1,24 @@
+# Контекст сборки отправляется демону целиком, поэтому всё лишнее исключаем.
+# Без этого в контекст уезжает .venv (около 80 МБ) и история git.
+
+.venv/
+venv/
+.git/
+.gitignore
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+.env
+.idea/
+.vscode/
+
+postman/
+docker/nginx/static/
+README.md
