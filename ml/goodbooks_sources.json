@@ -1,0 +1,29 @@
+{
+  "files": {
+    "ratings.csv": {
+      "url": "https://raw.githubusercontent.com/zygmuntz/goodbooks-10k/master/ratings.csv",
+      "sha256": "1ee8a97172bd6d97147a30d9cfb3029ac240bd27ba2aa9365981c051c65113f8",
+      "bytes": 72126826
+    },
+    "books.csv": {
+      "url": "https://raw.githubusercontent.com/zygmuntz/goodbooks-10k/master/books.csv",
+      "sha256": "4d21d0e0433128657c752e3a3d0405ac0ec11675d6c70c64cb0abf4ab1acb76a",
+      "bytes": 3286659
+    },
+    "books_enriched.csv": {
+      "url": "https://raw.githubusercontent.com/malcolmosh/goodbooks-10k-extended/master/books_enriched.csv",
+      "sha256": "13a938aa6cd7be91bc04173fea75506a490549e340f5542a106d6f4cf40975e4",
+      "bytes": 13598730
+    },
+    "LICENSE.goodbooks.txt": {
+      "url": "https://raw.githubusercontent.com/zygmuntz/goodbooks-10k/master/LICENSE",
+      "sha256": "1a459ea0f6e7f28d4eba7df0ddace58e0874e53dad4f787e0d206fdbf602147d",
+      "bytes": 187
+    },
+    "LICENSE.extended.txt": {
+      "url": "https://raw.githubusercontent.com/malcolmosh/goodbooks-10k-extended/master/LICENSE",
+      "sha256": "1a459ea0f6e7f28d4eba7df0ddace58e0874e53dad4f787e0d206fdbf602147d",
+      "bytes": 187
+    }
+  }
+}

@@ -22,3 +22,7 @@ dist/
 postman/
 docker/nginx/static/
 README.md
+data/
+notebooks/
+ml/
+.cache/

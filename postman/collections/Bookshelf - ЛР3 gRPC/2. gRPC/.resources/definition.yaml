@@ -1,0 +1,9 @@
+$kind: collection
+description: |-
+  Два прямых запроса к сервису рекомендаций, без FastAPI и PostgreSQL.
+  Из корня проекта запусти: .\.venv\Scripts\python.exe -m recsys.server
+  Адрес: 127.0.0.1:50051. TLS выключен, Authorization — No Auth.
+  Рабочая папка Postman — корень репозитория. Схема: src/recsys/proto/recommendations.proto.
+  Если схема не подхватилась, выбери этот файл в Service definition → Import a .proto file.
+  Сначала вызови Check, затем Recommend. Книги в Recommend — учебные данные самого сообщения; в БД они не записываются.
+order: 2000

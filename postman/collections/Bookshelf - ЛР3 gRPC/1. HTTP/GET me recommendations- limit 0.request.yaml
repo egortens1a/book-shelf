@@ -1,0 +1,19 @@
+$kind: http-request
+name: 'GET me recommendations: limit 0'
+url: '{{baseUrl}}/me/recommendations?limit=0'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{readerToken}}'
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test("Статус 422", () => pm.response.to.have.status(422));
+    pm.test("Ошибка относится к limit", () => {
+      const detail = pm.response.json().detail;
+      pm.expect(detail).to.be.an("array");
+      pm.expect(detail.some(error => error.loc.includes("limit"))).to.eql(true);
+    });
+  language: text/javascript
+order: 3000

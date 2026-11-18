@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package bookshelf.recommendations.v1;
+
+// API owns authentication and database access. Only an internal snapshot crosses RPC.
+service RecommendationService {
+  rpc Recommend (RecommendationRequest) returns (RecommendationResponse);
+  rpc Check (HealthRequest) returns (HealthResponse);
+}
+
+message Book {
+  int64 book_id = 1;
+  string title = 2;
+  string description = 3;
+  repeated string genres = 4;
+  bool published = 5;
+}
+
+message Rating {
+  int64 user_id = 1;
+  int64 book_id = 2;
+  double score = 3;
+}
+
+// Информаация о пользователе
+message RecommendationRequest {
+  int64 user_id = 1;
+  repeated Book books = 2;
+  repeated Rating ratings = 3;
+  repeated string interests = 4;
+  repeated int64 excluded_book_ids = 5;
+  uint32 limit = 6;
+}
+
+message Recommendation {
+  int64 book_id = 1;
+  double score = 2;
+}
+
+// Ответ на запрос рекомендаций
+message RecommendationResponse {
+  repeated Recommendation items = 1;
+}
+
+message HealthRequest {}
+message HealthResponse { bool ready = 1; }

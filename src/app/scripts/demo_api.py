@@ -296,10 +296,12 @@ async def run_api_demo() -> None:
                    f"/books/{rated_id}/rating", (404, 409), headers=bearer(reader_token))
 
         # ---------------------------------------------------------------
-        head("10. Рекомендации (заглушка до ЛР3)")
+        head("10. Рекомендации через gRPC (ЛР3)")
         recs = (await call(client, "рекомендации читателю", "GET", "/me/recommendations",
                            200, headers=bearer(token))).json()
-        assert recs == {"items": []}
+        assert isinstance(recs["items"], list)
+        assert len(recs["items"]) <= 10
+        assert all(set(item) == {"book_id", "title", "score"} for item in recs["items"])
         await call(client, "рекомендации библиотекарю", "GET", "/me/recommendations", 403,
                    headers=bearer(lib_token))
         await call(client, "рекомендации без токена", "GET", "/me/recommendations", 401)

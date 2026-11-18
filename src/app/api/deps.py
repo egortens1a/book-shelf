@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.errors import Forbidden, Unauthorized, UserNotFound
 from app.core.security import decode_token
 from app.core.db import get_async_session
+from app.core.config import get_settings
 from app.models import RoleTypes, User, UserStatus
 from app.repositories.user_repo import UserRepository
 from app.services.book_copy_service import BookCopyService
@@ -21,6 +22,8 @@ from app.services.catalog_service import CatalogService
 from app.services.directory_service import DirectoryService
 from app.services.fine_service import FineService
 from app.services.rating_service import RatingService
+from app.services.recommendation_client import RecommendationClient
+from app.services.recommendation_service import RecommendationService
 from app.services.reading_service import ReadingService
 from app.services.reservation_service import ReservationService
 from app.services.stats_service import StatsService
@@ -82,6 +85,12 @@ def require_role(*roles: RoleTypes):
 
 def get_user_service(session: SessionDep) -> UserService:
     return UserService(session)
+
+
+def get_recommendation_service(session: SessionDep) -> RecommendationService:
+    settings = get_settings()
+    client = RecommendationClient(settings.recommendations_grpc_target, settings.recommendations_timeout_seconds)
+    return RecommendationService(session, client)
 
 
 def get_catalog_service(session: SessionDep) -> CatalogService:

@@ -1,0 +1,9 @@
+$kind: collection
+description: |-
+  Отдельная коллекция ЛР3: HTTP → gRPC и прямые RPC.
+  HTTP: выбери Bookshelf local, выполни 1. HTTP → Login reader, затем два GET-запроса рекомендаций.
+  Используются существующие переменные baseUrl, readerEmail, readerPassword и readerToken.
+  Для локального API baseUrl=http://127.0.0.1:8000. Нужны работающие API, PostgreSQL и gRPC-сервис.
+  Прямые RPC: 2. gRPC → Check и Recommend, адрес 127.0.0.1:50051, TLS выключен, No Auth.
+  Рабочая папка Postman — корень проекта; схема src/recsys/proto/recommendations.proto.
+  Прямым RPC API, JWT и БД не нужны: учебные данные уже находятся в сообщении Recommend.

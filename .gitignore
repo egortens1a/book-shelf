@@ -12,7 +12,12 @@ __pycache__/
 .VSCodeCounter/
 data/
 
-# когда будет готово - вернуть
-ml/
-notebooks/
-recsys/
+.cache/
+.pytest_cache/
+build/
+dist/
+**/.ipynb_checkpoints/
+notebooks/artifacts/
+
+docs/
+artifacts/

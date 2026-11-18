@@ -38,11 +38,37 @@ services:
       FINE_LOST: ${FINE_LOST:-1500.00}
       SUBSCRIPTION_PRICE: ${SUBSCRIPTION_PRICE:-299.00}
       SUBSCRIPTION_DAYS: ${SUBSCRIPTION_DAYS:-30}
+      RECOMMENDATIONS_GRPC_TARGET: recommendations:50051
+      RECOMMENDATIONS_TIMEOUT_SECONDS: ${RECOMMENDATIONS_TIMEOUT_SECONDS:-30}
     depends_on:
       db:
         condition: service_healthy
+      recommendations:
+        condition: service_healthy
     expose:
       - "8000"
+
+  recommendations:
+    build:
+      context: .
+      dockerfile: docker/recommendations/Dockerfile
+    container_name: bookshelf-recommendations
+    environment:
+      RECOMMENDATIONS_HOST: 0.0.0.0
+      RECOMMENDATIONS_PORT: 50051
+      RECOMMENDATIONS_CACHE_DIR: /models
+      RECOMMENDATIONS_MODEL: ${RECOMMENDATIONS_MODEL:-sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2}
+      RECOMMENDATIONS_CF_WEIGHT: ${RECOMMENDATIONS_CF_WEIGHT:-0.25}
+    volumes:
+      - ./.cache/models:/models
+    expose:
+      - "50051"
+    healthcheck:
+      test: ["CMD", "python", "-m", "recsys.healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 180s
 
   nginx:
     build:
@@ -57,4 +83,4 @@ services:
       - api
 
 volumes:
-  pgdata:
+  bookshelf_pgdata:

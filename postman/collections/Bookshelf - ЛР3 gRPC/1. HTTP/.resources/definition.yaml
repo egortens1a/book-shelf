@@ -1,0 +1,3 @@
+$kind: collection
+description: Вход читателя и два HTTP-сценария рекомендаций с JWT. Запускать сверху вниз.
+order: 1000

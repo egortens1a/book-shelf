@@ -1,0 +1,22 @@
+$kind: grpc-request
+name: Check
+description: Проверка готовности отдельного gRPC-процесса. Ожидается ready=true и статус gRPC 0.
+url: '127.0.0.1:50051'
+methodPath: bookshelf.recommendations.v1.RecommendationService/Check
+schema:
+  source: file
+  location: src/recsys/proto/recommendations.proto
+settings:
+  secureConnection: false
+auth:
+  type: noauth
+message:
+  content: '{}'
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test("gRPC OK", () => pm.expect(pm.response.statusCode).to.eql(0));
+    pm.test("Сервис готов", () => {
+      pm.expect(pm.response.messages.idx(0).data.ready).to.eql(true);
+    });
+  language: text/javascript
