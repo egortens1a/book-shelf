@@ -31,7 +31,8 @@ scripts:
   code: |-
     pm.test("gRPC OK", () => pm.expect(pm.response.statusCode).to.eql(0));
     pm.test("Возвращена только допустимая книга 2", () => {
-      const items = pm.response.messages.idx(0).data.items;
+      const items = [];
+      pm.response.messages.each(message => items.push(message.data));
       pm.expect(items).to.be.an("array").with.lengthOf(1);
       const item = items[0];
       // В JSON-представлении protobuf int64 может быть строкой.

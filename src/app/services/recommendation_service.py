@@ -18,7 +18,7 @@ class RecommendationService:
 
     async def recommend(self, user_id: int, limit: int = 10) -> RecommendationsRead:
         data = await self.repo.load(user_id)
-        response = await self.client.recommend(pb.RecommendationRequest(
+        responses = await self.client.recommend(pb.RecommendationRequest(
             user_id=user_id, limit=limit, interests=data.interests, excluded_book_ids=data.excluded,
             books=[pb.Book(book_id=b.book_id, title=b.title, description=b.description,
                            genres=b.genres, published=b.published) for b in data.books],
@@ -29,7 +29,7 @@ class RecommendationService:
         allowed = {b.book_id: b for b in data.books if b.published and b.book_id not in excluded}
         seen = set()
         items = []
-        for item in response.items:
+        for item in responses:
             if item.book_id not in allowed or item.book_id in seen or not math.isfinite(item.score) or not 0 <= item.score <= 1:
                 raise RecommendationsUnavailable("Invalid recommendation service response")
             seen.add(item.book_id)

@@ -4,7 +4,7 @@ package bookshelf.recommendations.v1;
 
 // API owns authentication and database access. Only an internal snapshot crosses RPC.
 service RecommendationService {
-  rpc Recommend (RecommendationRequest) returns (RecommendationResponse);
+  rpc Recommend (RecommendationRequest) returns (stream Recommendation);
   rpc Check (HealthRequest) returns (HealthResponse);
 }
 
@@ -37,10 +37,6 @@ message Recommendation {
   double score = 2;
 }
 
-// Ответ на запрос рекомендаций
-message RecommendationResponse {
-  repeated Recommendation items = 1;
-}
 
 message HealthRequest {}
 message HealthResponse { bool ready = 1; }

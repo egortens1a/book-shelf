@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
 WORKDIR /app
-ARG PIP_INDEX_URL=https://pypi.org/simple
+ARG PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
 
 COPY pyproject.toml .
 COPY src/ ./src/

@@ -35,4 +35,4 @@ COPY migrations/ ./migrations/
 # --proxy-headers: доверять заголовкам Nginx (X-Forwarded-Proto и X-Forwarded-For),
 # иначе API будет считать, что запрос пришёл по http. Порт 8000 снаружи недоступен,
 # так что "*" безопасно.
-CMD ["sh", "-c", "alembic upgrade head && exec  app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*'"]
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*'"]

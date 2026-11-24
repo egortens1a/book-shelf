@@ -36,7 +36,7 @@ class RecommendationServicer(rpc.RecommendationServiceServicer):
             if any(r.user_id <= 0 or r.book_id not in ids for r in request.ratings):
                 raise ValueError("Ratings must reference books in the snapshot and positive user ids")
             if not context.is_active():
-                return pb.RecommendationResponse()
+                return
             items = self.recommender.recommend(
                 books=[Book(b.book_id, b.title, b.description, tuple(b.genres), b.published) for b in request.books],
                 user=UserProfile(request.user_id, tuple(request.interests), tuple(request.excluded_book_ids)),
@@ -45,9 +45,12 @@ class RecommendationServicer(rpc.RecommendationServiceServicer):
             )
             logger.info("gRPC Recommend user_id=%s books=%s ratings=%s returned=%s elapsed=%.3fs",
                         request.user_id, len(request.books), len(request.ratings), len(items), time.monotonic() - started)
-            return pb.RecommendationResponse(items=[pb.Recommendation(book_id=r.book_id, score=r.score) for r in items])
+            for item in items:
+                yield pb.Recommendation(book_id=item.book_id, score=item.score)
+
         except ValueError as exc:
             context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(exc))
+            
         except Exception:
             logger.exception("Recommendation computation failed")
             context.abort(grpc.StatusCode.INTERNAL, "Recommendation computation failed")

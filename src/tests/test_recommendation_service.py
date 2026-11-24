@@ -14,7 +14,6 @@ from recsys.proto import recommendations_pb2 as pb
 async def test_invalid_rpc_results_are_rejected(snapshot, items):
     service = RecommendationService(None, AsyncMock())
     service.repo.load = AsyncMock(return_value=snapshot)
-    service.client.recommend.return_value = pb.RecommendationResponse(
-        items=[pb.Recommendation(book_id=bid, score=score) for bid, score in items])
+    service.client.recommend.return_value = [pb.Recommendation(book_id=bid, score=score) for bid, score in items]
     with pytest.raises(RecommendationsUnavailable):
         await service.recommend(1)

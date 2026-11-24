@@ -35,10 +35,10 @@ class RecommendationServiceStub:
         Args:
             channel: A grpc.Channel.
         """
-        self.Recommend = channel.unary_unary(
+        self.Recommend = channel.unary_stream(
                 '/bookshelf.recommendations.v1.RecommendationService/Recommend',
                 request_serializer=recsys_dot_proto_dot_recommendations__pb2.RecommendationRequest.SerializeToString,
-                response_deserializer=recsys_dot_proto_dot_recommendations__pb2.RecommendationResponse.FromString,
+                response_deserializer=recsys_dot_proto_dot_recommendations__pb2.Recommendation.FromString,
                 _registered_method=True)
         self.Check = channel.unary_unary(
                 '/bookshelf.recommendations.v1.RecommendationService/Check',
@@ -66,10 +66,10 @@ class RecommendationServiceServicer:
 
 def add_RecommendationServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Recommend': grpc.unary_unary_rpc_method_handler(
+            'Recommend': grpc.unary_stream_rpc_method_handler(
                     servicer.Recommend,
                     request_deserializer=recsys_dot_proto_dot_recommendations__pb2.RecommendationRequest.FromString,
-                    response_serializer=recsys_dot_proto_dot_recommendations__pb2.RecommendationResponse.SerializeToString,
+                    response_serializer=recsys_dot_proto_dot_recommendations__pb2.Recommendation.SerializeToString,
             ),
             'Check': grpc.unary_unary_rpc_method_handler(
                     servicer.Check,
@@ -99,12 +99,12 @@ class RecommendationService:
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
+        return grpc.experimental.unary_stream(
             request,
             target,
             '/bookshelf.recommendations.v1.RecommendationService/Recommend',
             recsys_dot_proto_dot_recommendations__pb2.RecommendationRequest.SerializeToString,
-            recsys_dot_proto_dot_recommendations__pb2.RecommendationResponse.FromString,
+            recsys_dot_proto_dot_recommendations__pb2.Recommendation.FromString,
             options,
             channel_credentials,
             insecure,

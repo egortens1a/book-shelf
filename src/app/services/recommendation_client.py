@@ -17,15 +17,19 @@ class RecommendationClient:
         self.target = target
         self.timeout = timeout
 
-    async def recommend(self, request: pb.RecommendationRequest) -> pb.RecommendationResponse:
+    async def recommend(self, request: pb.RecommendationRequest) -> list[pb.Recommendation]:
         if request.ByteSize() > MAX_MESSAGE_BYTES:
             raise RecommendationsUnavailable("Recommendation catalog exceeds the RPC message limit")
         try:
             async with grpc.aio.insecure_channel(self.target, options=GRPC_OPTIONS) as channel:
                 logger.info("HTTP -> gRPC Recommend target=%s user_id=%s", self.target, request.user_id)
-                response = await rpc.RecommendationServiceStub(channel).Recommend(request, timeout=self.timeout)
-                logger.info("gRPC -> HTTP returned=%s user_id=%s", len(response.items), request.user_id)
+                response = [rec 
+                            async for rec 
+                            in rpc.RecommendationServiceStub(channel).Recommend(request, timeout=self.timeout)]
+                
+                logger.info("gRPC -> HTTP returned=%s user_id=%s", len(response), request.user_id)
                 return response
+
         except grpc.aio.AioRpcError as exc:
             logger.warning("Recommendation RPC failed: %s", exc.code().name)
             raise RecommendationsUnavailable("Recommendation service is temporarily unavailable") from exc
