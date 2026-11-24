@@ -37,6 +37,10 @@ class InvalidInput(ServiceError):
     """422: невалидные данные, не пойманные Pydantic."""
 
 
+class RecommendationsUnavailable(ServiceError):
+    """503: рекомендательный сервис недоступен или вернул неверный ответ."""
+
+
 # 404
 
 class UserNotFound(NotFound):

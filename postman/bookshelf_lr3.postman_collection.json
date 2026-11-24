@@ -1,0 +1,172 @@
+{
+  "info": {
+    "name": "Bookshelf - ЛР3 gRPC (HTTP)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Отдельные HTTP-проверки ЛР3. Выбери окружение Bookshelf local и выполни Login reader, затем два запроса рекомендаций. Прямые Check и Recommend находятся в YAML-коллекции postman/collections/Bookshelf - ЛР3 gRPC/2. gRPC/."
+  },
+  "item": [
+    {
+      "name": "1. HTTP",
+      "item": [
+        {
+          "name": "Login reader",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Есть access_token\", () => pm.expect(j.access_token).to.be.a(\"string\").and.not.empty);",
+                  "pm.environment.set(\"readerToken\", j.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{readerEmail}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{readerPassword}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET me recommendations",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Массив рекомендаций, не больше 10\", () => {",
+                  "  pm.expect(j.items).to.be.an(\"array\");",
+                  "  pm.expect(j.items.length).to.be.at.most(10);",
+                  "});",
+                  "pm.test(\"ID уникальны, поля и баллы корректны\", () => {",
+                  "  const ids = new Set();",
+                  "  j.items.forEach(item => {",
+                  "    pm.expect(item).to.have.all.keys(\"book_id\", \"title\", \"score\");",
+                  "    pm.expect(Number.isSafeInteger(item.book_id)).to.eql(true);",
+                  "    pm.expect(item.book_id).to.be.above(0);",
+                  "    pm.expect(item.title).to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(item.score).to.be.a(\"number\");",
+                  "    pm.expect(Number.isFinite(item.score)).to.eql(true);",
+                  "    pm.expect(item.score).to.be.within(0, 1);",
+                  "    ids.add(item.book_id);",
+                  "  });",
+                  "  pm.expect(ids.size).to.eql(j.items.length);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/recommendations?limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "recommendations"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{readerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET me recommendations: limit 0",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Ошибка относится к limit\", () => {",
+                  "  const detail = pm.response.json().detail;",
+                  "  pm.expect(detail).to.be.an(\"array\");",
+                  "  pm.expect(detail.some(error => error.loc.includes(\"limit\"))).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/recommendations?limit=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "recommendations"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "0"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{readerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

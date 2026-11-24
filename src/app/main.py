@@ -2,6 +2,7 @@
 
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+import logging
 
 
 import uvicorn
@@ -36,6 +37,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 def create_app() -> FastAPI:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [pid=%(process)d] %(name)s: %(message)s")
     app = FastAPI(
         title="BookShelf API",
         version="0.1.0",
@@ -45,7 +47,7 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
 
     app.include_router(auth.router) # /register, /login
-    app.include_router(me.router) # /me, /me/interests, /me/recommendations (в будущем)
+    app.include_router(me.router) # /me, /me/interests, /me/recommendations
     app.include_router(admin.router)       # /admin/...
 
     app.include_router(catalog.reader_router)     # /books, /genres, /authors

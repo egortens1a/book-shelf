@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
 
+    # Внутренний gRPC-сервис рекомендаций.
+    recommendations_grpc_target: str = "127.0.0.1:50051"
+    recommendations_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
+
 
 @lru_cache
 def get_settings() -> Settings:

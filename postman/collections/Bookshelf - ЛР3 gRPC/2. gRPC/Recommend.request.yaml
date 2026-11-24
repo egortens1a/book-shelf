@@ -1,0 +1,45 @@
+$kind: grpc-request
+name: Recommend
+description: Из четырёх книг допустима только книга 2. Книга 1 уже оценена, 3 не опубликована, 4 исключена.
+url: '127.0.0.1:50051'
+methodPath: bookshelf.recommendations.v1.RecommendationService/Recommend
+schema:
+  source: file
+  location: src/recsys/proto/recommendations.proto
+settings:
+  secureConnection: false
+  includeDefaultFields: true
+auth:
+  type: noauth
+message:
+  content: |-
+    {
+      "user_id": "1",
+      "limit": 10,
+      "books": [
+        {"book_id": "1", "title": "Space", "published": true},
+        {"book_id": "2", "title": "Space stories", "published": true},
+        {"book_id": "3", "title": "Space archive", "published": false},
+        {"book_id": "4", "title": "Space adventures", "published": true}
+      ],
+      "ratings": [{"user_id": "1", "book_id": "1", "score": 10}],
+      "interests": ["science fiction"],
+      "excluded_book_ids": ["4"]
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test("gRPC OK", () => pm.expect(pm.response.statusCode).to.eql(0));
+    pm.test("Возвращена только допустимая книга 2", () => {
+      const items = [];
+      pm.response.messages.each(message => items.push(message.data));
+      pm.expect(items).to.be.an("array").with.lengthOf(1);
+      const item = items[0];
+      // В JSON-представлении protobuf int64 может быть строкой.
+      pm.expect(Number(item.book_id ?? item.bookId)).to.eql(2);
+      pm.expect(item.score).to.be.a("number");
+      pm.expect(Number.isFinite(item.score)).to.eql(true);
+      pm.expect(item.score).to.be.within(0, 1);
+      pm.expect(item).not.to.have.property("title");
+    });
+  language: text/javascript

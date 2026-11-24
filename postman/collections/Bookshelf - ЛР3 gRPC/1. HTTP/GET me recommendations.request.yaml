@@ -1,0 +1,32 @@
+$kind: http-request
+url: '{{baseUrl}}/me/recommendations?limit=10'
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: '{{readerToken}}'
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test("Статус 200", () => pm.response.to.have.status(200));
+    const j = pm.response.json();
+    pm.test("Массив рекомендаций, не больше 10", () => {
+      pm.expect(j.items).to.be.an("array");
+      pm.expect(j.items.length).to.be.at.most(10);
+    });
+    pm.test("ID уникальны, поля и баллы корректны", () => {
+      const ids = new Set();
+      j.items.forEach(item => {
+        pm.expect(item).to.have.all.keys("book_id", "title", "score");
+        pm.expect(Number.isSafeInteger(item.book_id)).to.eql(true);
+        pm.expect(item.book_id).to.be.above(0);
+        pm.expect(item.title).to.be.a("string").and.not.empty;
+        pm.expect(item.score).to.be.a("number");
+        pm.expect(Number.isFinite(item.score)).to.eql(true);
+        pm.expect(item.score).to.be.within(0, 1);
+        ids.add(item.book_id);
+      });
+      pm.expect(ids.size).to.eql(j.items.length);
+    });
+  language: text/javascript
+order: 2000

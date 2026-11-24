@@ -2,18 +2,20 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
-from app.api.deps import get_current_user, get_user_service, require_role
+from app.api.deps import get_current_user, get_recommendation_service, get_user_service, require_role
 from app.models import RoleTypes, User
 from app.schemas.recommendation import RecommendationsRead
 from app.schemas.user import InterestsRead, InterestsUpdate, MeRead
 from app.services.user_service import UserService
+from app.services.recommendation_service import RecommendationService
 
 router = APIRouter(prefix="/me", tags=["me"])
 
 Users = Annotated[UserService, Depends(get_user_service)]
 Reader = Annotated[User, Depends(require_role(RoleTypes.READER))]
+Recommendations = Annotated[RecommendationService, Depends(get_recommendation_service)]
 
 
 @router.get("", response_model=MeRead)
@@ -40,6 +42,6 @@ async def put_interests(data: InterestsUpdate, user: Reader, users: Users):
 
 
 @router.get("/recommendations", response_model=RecommendationsRead)
-async def get_recommendations(user: Reader):
-    # Заглушка ЛР2: всегда пустой список. В ЛР3 здесь появится вызов gRPC.
-    return RecommendationsRead(items=[])
+async def get_recommendations(user: Reader, recommendations: Recommendations,
+                              limit: Annotated[int, Query(ge=1, le=100)] = 10):
+    return await recommendations.recommend(user.id, limit=limit)

@@ -10,6 +10,7 @@ from app.core.errors import (
     Forbidden,
     InvalidInput,
     NotFound,
+    RecommendationsUnavailable,
     ServiceError,
     Unauthorized,
 )
@@ -39,6 +40,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(NotFound, _make_handler(status.HTTP_404_NOT_FOUND))
     app.add_exception_handler(Conflict, _make_handler(status.HTTP_409_CONFLICT))
     app.add_exception_handler(InvalidInput, _make_handler(status.HTTP_422_UNPROCESSABLE_CONTENT))
+    app.add_exception_handler(RecommendationsUnavailable, _make_handler(status.HTTP_503_SERVICE_UNAVAILABLE))
     app.add_exception_handler(ServiceError, _make_handler(status.HTTP_400_BAD_REQUEST))
     
     app.add_exception_handler(Exception, unhandled_exception_handler)
